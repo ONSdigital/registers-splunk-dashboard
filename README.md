@@ -4,7 +4,9 @@
 
 1. Install the Splunk-SDK using Pip
 
-``` pip install splunk-sdk ```
+```python
+pip install splunk-sdk 
+```
 
 2. Inside Splunk create an index called 'performance'
 
