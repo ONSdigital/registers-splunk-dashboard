@@ -46,13 +46,12 @@ def splunk_push(index, sourcetype, startTime):
     after_time = str(strftime("%H:%M:%S"))
 
     try:
-        to_send =   "time=" + str(time.strftime('%c')) +\
+        to_send =   "date_and_time=" + str(time.strftime('%c')) +\
                     " request_time=" + str(current_time) +\
                     " response_time=" + (after_time) +\
                     " uptime=" + str(int(time.time() - startTime) / 60) +\
                     " forcast_expected=" + str(int(time.time() - startTime) / 60) +\
                     " availability=" + str(randint(80, 100)) +\
-                    " api_key=" + str(random.choice(["HMRC", "CrownCom", "WelshAssembly", "CompanyHouse"])) +\
                     " query_id=" + str("qn" + str(randint(1,250)) + "g0") +\
                     " query_type=" + str(random.choice(["bulk", "single"])) +\
                     " number_of_queries=" + str(randint(1,25)) +\
@@ -60,7 +59,7 @@ def splunk_push(index, sourcetype, startTime):
                     " bulk_match_time=" + str(randint(5,60)) +\
                     " data_returned=" + str(random.uniform(0,50)) +\
                     " percentage_failed_queries=" + str(randint(1,5)) +\
-                    " company_name=" + str(random.choice(["HMRC","Crown Com", "Welsh Assembly", "Company House"])) +\
+                    " component_name=" + str(random.choice(["HMRC","Crown Com", "Welsh Assembly", "Company House"])) +\
                     " success_flag=" + str(random.choice(["Success","Fail"])) +\
                     " time_to_ingest=" + str(randint(5,50000) / 60 / 60) +\
                     " spark_status=" + str(randint(1,3)) +\
