@@ -59,7 +59,7 @@ def splunk_push(index, sourcetype, startTime):
                     " bulk_match_time=" + str(randint(5,60)) +\
                     " data_returned=" + str(random.uniform(0,50)) +\
                     " percentage_failed_queries=" + str(randint(1,5)) +\
-                    " component_name=" + str(random.choice(["HMRC","Crown Com", "Welsh Assembly", "Company House"])) +\
+                    " component_name=" + str(random.choice(["HMRC","Crown_Commercial", "Welsh_Assembly", "Company_House"])) +\
                     " success_flag=" + str(random.choice(["Success","Fail"])) +\
                     " time_to_ingest=" + str(randint(5,50000) / 60 / 60) +\
                     " spark_status=" + str(randint(1,3)) +\
