@@ -1,13 +1,24 @@
-<form script="tokenlinks.js, table_cell_highlighting.js" stylesheet="table_cell_highlighting.css">
+<form script="table_icons_rangemap.js, tokenlinks.js" stylesheet="table_cell_highlighting.css, table_decorations.css">
   <label>Performance Dashboard</label>
   <description>Test Dashboard - NO JavaScript, XML Modified</description>
   <fieldset autoRun="true" submitButton="false">
     <input type="time" token="time" searchWhenChanged="true">
-      <label></label>
+      <label>Set Time</label>
       <default>
         <earliest>-60m@m</earliest>
         <latest>now</latest>
       </default>
+    </input>
+    <input type="dropdown" token="field1" searchWhenChanged="true">
+      <label>APIKey/ Body</label>
+      <choice value="">All</choice>
+      <choice value="| where component_name=&quot;HMRC&quot;">HMRC</choice>
+      <choice value="| where component_name=&quot;Crown&quot;">Crown Commercial</choice>
+      <choice value="| where component_name=&quot;Welsh&quot;">Welsh Assembly</choice>
+      <choice value="| where component_name=&quot;Company&quot;">Company House</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where component_name="HMRC"</default>
     </input>
   </fieldset>
   <row>
@@ -15,7 +26,7 @@
       <title>System Uptime</title>
       <single>
         <search>
-          <query>index="performance"| stats first(uptime) as Uptime</query>
+          <query>index="allrequests"| stats first(uptime) as Uptime</query>
           <earliest>0</earliest>
           <latest></latest>
           <refresh>30s</refresh>
@@ -143,7 +154,7 @@
       <title>API Requests</title>
       <input type="link" token="needed">
         <label>Choose a view type:</label>
-        <choice value="link4444">Over Time</choice>
+        <choice value="link4444">Seperated</choice>
         <choice value="link5555">Overview</choice>
         <default>Table</default>
         <change>
@@ -157,6 +168,29 @@
           </condition>
         </change>
       </input>
+      <input type="radio" token="predict_switch" searchWhenChanged="true" depends="$showSplunkd29$">
+        <label>Predict Toggle:</label>
+        <default>Off</default>
+        <choice value="eventstats avg(&quot;Total API Requests&quot;) as Average">Off</choice>
+        <choice value="predict &quot;Total API Requests&quot; future_timespan=30 holdback=1 ">On</choice>
+      </input>
+      <chart depends="$showSplunkd29$">
+        <title>Overall API Requests (trend line shows average-&gt; global set)</title>
+        <search>
+          <query>index = "allrequests" | timechart count as "Total API Requests" | $predict_switch$</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleY.text">Total Number of Queries</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.overlayFields">Average</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.fieldColors">{"Total API Requests": 0x2B9954, "Average":0xDC143C}</option>
+        <option name="charting.legend.masterLegend">null</option>
+        <option name="height">300</option>
+      </chart>
       <chart depends="$showInternal29$">
         <title>Total Number of API calls per key</title>
         <search>
@@ -184,139 +218,13 @@
         <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
         <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
         <option name="charting.legend.placement">right</option>
-      </chart>
-      <chart depends="$showSplunkd29$">
-        <title>Overall API Requests (trend line shows average-&gt; global set)</title>
-        <search>
-          <query>index = "allrequests" | timechart count as "Total API Requests" | eventstats avg("Total API Requests") as Average</query>
-          <earliest>$earliest$</earliest>
-          <latest>$latest$</latest>
-        </search>
-        <option name="charting.axisTitleX.text">Date</option>
-        <option name="charting.axisTitleY.text">Total Number of Queries</option>
-        <option name="charting.chart">column</option>
-        <option name="charting.chart.overlayFields">Average</option>
-        <option name="charting.chart.showDataLabels">none</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.fieldColors">{"Total API Requests": 0x2B9954, "Average":0xDC143C}</option>
-        <option name="charting.legend.masterLegend">null</option>
-        <option name="height">300</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-   
-    <panel>
-            <title>API Requests Errors and Successes</title>
 
-            
-      <chart >
-        <title>Total Successful and Failed API Calls</title>
-        <search> <query>index = "allrequests" | timechart count as "Number of Queries" by success_flag</query>
-          <earliest>@w1</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-          </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.text">Date</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.text">Total successful or Failed Requests</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">column</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">all</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">all</option>
-        <option name="charting.layout.splitSeries">0</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.placement">right</option>
-        <option name="height">311</option>
       </chart>
-            <html>
-                <button class="btn" data-set-token="show_details" data-value="show">Show Details</button>
+      <html depends="$showInternal29$">
+                <button class="btn" data-set-token="show_overview" data-value="show">Show Overview</button>
             </html>
-        </panel>
-        
-        <!-- The panel is only shown once the user clicks on the button and the $show_details$ token is set -->
-        <panel depends="$show_details$">
-              <table>
-                <title>Results of API Requests Statuses</title>
-                <search> 
-                  <query>index = "allrequests" | stats count(success_flag) as "Number of Successes or Failures" by component_name, success_flag</query>
-                  <earliest>-1d@d</earliest>
-                  <latest>@d</latest>
-                  <sampleRatio>1</sampleRatio>
-                </search>
-                <option name="count">20</option>
-                <option name="dataOverlayMode">none</option>
-                <option name="drilldown">cell</option>
-                <option name="percentagesRow">false</option>
-                <option name="rowNumbers">false</option>
-                <option name="totalsRow">false</option>
-                <option name="wrap">true</option>
-              </table>
-            <html>
-                <button class="btn" data-unset-token="show_details">Hide Details</button>
-            </html>
-        </panel>
-  </row>
-  <row>
-    <panel>
-      <title>API Request Types</title>
-      <input type="link" token="needed">
-        <label>Choose a view type:</label>
-        <choice value="link44">Over Time</choice>
-        <choice value="link55">Overview</choice>
-        <default>Table</default>
-        <change>
-          <condition value="link44">
-            <set token="showInternal2">true</set>
-            <unset token="showSplunkd2"></unset>
-          </condition>
-          <condition value="link55">
-            <unset token="showInternal2"></unset>
-            <set token="showSplunkd2">true</set>
-          </condition>
-        </change>
-      </input>
-      <chart depends="$showInternal2$">
-        <title>Total Request Type</title>
-        <search>
-          <query>index = "allrequests" | stats count as "Total API Requests" by query_type</query>
-          <earliest>-24h</earliest>
-          <latest>now</latest>
-        </search>
-        <option name="charting.chart">pie</option>
-      </chart>
-      <chart depends="$showSplunkd2$">
-        <title>Request Type Over time (This Week)</title>
-        <search>
-          <query>index = "allrequests" | timechart count as "Number of Queries" by query_type</query>
-          <earliest>@w0</earliest>
-          <latest>now</latest>
-        </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
-        <option name="charting.axisTitleX.text">Date (week)</option>
-        <option name="charting.axisTitleY.text">Volume</option>
-        <option name="charting.chart">line</option>
-        <option name="charting.chart.showDataLabels">none</option>
-      </chart>
     </panel>
-    <panel>
-      <title>Calls per API Key - Pie</title>
+    <panel depends="$show_overview$">
       <chart>
         <title>Volume of Call per Key</title>
         <search>
@@ -347,6 +255,117 @@
         <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
         <option name="charting.legend.placement">right</option>
         <option name="height">343</option>
+      </chart>
+      <html depends="$show_overview$">
+          <button class="btn" data-unset-token="show_overview">Hide Details</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>API Requests Errors and Successes</title>
+      <chart>
+        <title>Total Successful and Failed API Calls</title>
+        <search>
+          <query>index = "allrequests" | timechart count as "Number of Queries" by success_flag</query>
+          <earliest>@w1</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Total successful or Failed Requests</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">all</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="height">311</option>
+      </chart>
+      <html>
+                <button class="btn" data-set-token="show_details" data-value="show">Show Details</button>
+            </html>
+    </panel>
+    <panel depends="$show_details$">
+      <table>
+        <title>Results of API Requests Statuses</title>
+        <search>
+          <query>index = "allrequests" | stats count(success_flag) as "Number of Successes or Failures" by component_name, success_flag</query>
+          <earliest>@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+      <html>
+                <button class="btn" data-unset-token="show_details">Hide Details</button>
+            </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>API Request Types</title>
+      <input type="link" token="needed">
+        <label>Choose a view type:</label>
+        <choice value="link44">Ovewview</choice>
+        <choice value="link55">Over Time</choice>
+        <default>Table</default>
+        <change>
+          <condition value="link44">
+            <set token="showInternal2">true</set>
+            <unset token="showSplunkd2"></unset>
+          </condition>
+          <condition value="link55">
+            <unset token="showInternal2"></unset>
+            <set token="showSplunkd2">true</set>
+          </condition>
+        </change>
+      </input>
+      <chart depends="$showInternal2$">
+        <title>Total Request Type</title>
+        <search>
+          <query>index = "allrequests" | stats count as "Total API Requests" by query_type $field1$</query>
+          <earliest>@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+      <chart depends="$showSplunkd2$">
+        <title>Request Type Over time (This Week)</title>
+        <search>
+          <query>index = "allrequests" | timechart count as "Number of Queries" by query_type</query>
+          <earliest>@w0</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
+        <option name="charting.axisTitleX.text">Date (week)</option>
+        <option name="charting.axisTitleY.text">Volume</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.showDataLabels">none</option>
       </chart>
     </panel>
     <panel>
@@ -418,10 +437,12 @@
         <title>Request and Response Time - Single Match</title>
         <search>
           <query>index = "allrequests"
-| eval request = strptime(request_time, "%H:%M:%S") 
-| eval response = strptime(response_time, "%H:%M:%S") 
-| eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "single"
+| eval request = strptime(request_time, "%H:%M:%S")
+| eval response = strptime(response_time, "%H:%M:%S")
+| eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "single" $field1$
 | table query_id, request_time, response_time, Difference</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -432,18 +453,20 @@
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
         <format type="color" field="Difference">
-          <colorPalette type="list">[#FFFFFF,#F7BC38,#D93F3C]</colorPalette>
-          <scale type="threshold">3,4</scale>
+          <colorPalette type="list">[#FFFFFF,#F7BC38,#DC143C]</colorPalette>
+          <scale type="threshold">2,4</scale>
         </format>
       </table>
       <table depends="$showSplunkd22$">
         <title>Request and Response Time - Bulk Match</title>
         <search>
           <query>index = "allrequests"
-| eval request = strptime(request_time, "%H:%M:%S") 
-| eval response = strptime(response_time, "%H:%M:%S") 
-| eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "bulk"
+| eval request = strptime(request_time, "%H:%M:%S")
+| eval response = strptime(response_time, "%H:%M:%S")
+| eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "bulk" $field1$
 | table query_id, request_time, response_time, Difference</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -458,14 +481,17 @@
           <scale type="threshold">3,4</scale>
         </format>
       </table>
-      <table depends="$showSplunkd32$">
+      <table id="table2" depends="$showSplunkd32$">
         <title>Ingess Start Time and End Ingress Time</title>
         <search>
           <query>index = "allrequests"
-| eval request = strptime(request_time, "%H:%M:%S") 
-| eval response = strptime(response_time, "%H:%M:%S") 
-| eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "single"
-| table query_id, request_time, response_time, Difference</query>
+              | eval request = strptime(request_time, "%H:%M:%S")
+              | eval response = strptime(response_time, "%H:%M:%S")
+              | eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "single" $field1$
+              | table query_id, request_time, response_time, Difference, success_flag
+              | rename "query_id" as "Query ID", "request_time" as "Start Time", "response_time" as "End time", "success_flag" as "Success Flag"</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -475,14 +501,20 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
+        <format type="color" field="success_flag">
+          <colorPalette type="map">{"Fail":#D8451C,"Success":#65A637}</colorPalette>
+        </format>
         <format type="color" field="Difference">
-          <colorPalette type="list">[#FFFFFF,#F7BC38,#D93F3C]</colorPalette>
-          <scale type="threshold">3,4</scale>
+          <colorPalette type="list">[#FFFFFF,#F7BC38,#D8451C]</colorPalette>
+          <scale type="threshold">2,4</scale>
+        </format>
+        <format type="color" field="Success Flag">
+          <colorPalette type="map">{"Success":#65A637,"Fail":#D93F3C}</colorPalette>
         </format>
       </table>
     </panel>
     <panel>
-      <title>Data Volume</title>
+      <title>Data Volume and Component Availability</title>
       <input type="link" token="needed">
         <label>Choose a view type:</label>
         <choice value="link4">Table</choice>
@@ -507,12 +539,36 @@
           <latest>now</latest>
         </search>
       </table>
+      <!--<html>            -->
+      <!--   <a href="/app/search/appserver/static/system_component"><h3>System Component</h3></a>-->
+      <!-- </html>-->
+      <table id="table1" depends="$showInternal$">
+        <title>System Component Status (Real - Time)</title>
+        <search>
+          <query>index="allrequests" | head 1|  stats sum(hdfs_status) as "HDFS Status", sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(spark_status) as "Spark Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>
+          <earliest>rt</earliest>
+          <latest>rt</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <link>
+            system_component
+            </link>
+          </drilldown>
+      </table>
       <chart depends="$showSplunkd$">
         <title>Graph of Data Record Request From Users (This Week)</title>
         <search>
           <query>index = "allrequests" | timechart sum(data_returned) by component_name</query>
-          <earliest>@w0</earliest>
-          <latest>now</latest>
+          <earliest>-7d@w0</earliest>
+          <latest>@w0</latest>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">-90</option>
         <option name="charting.axisTitleX.text">Date</option>
@@ -525,45 +581,10 @@
   </row>
   <row>
     <panel>
-      <title>Availability of System Components</title>
-      <table>
-        <search>
-          <query>index="allrequests" | table hdfs_status, flume_status, elastic_search_status, spark_status | head 1</query>
-          <earliest>0</earliest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">20</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">cell</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-        <format type="color" field="hdfs_status">
-          <colorPalette type="list">[#65A637,#F7BC38,#D93F3C]</colorPalette>
-          <scale type="threshold">1.1,2.1</scale>
-        </format>
-        <format type="color" field="flume_status">
-          <colorPalette type="list">[#65A637,#F7BC38,#D93F3C]</colorPalette>
-          <scale type="threshold">1.1,2.1</scale>
-        </format>
-        <format type="color" field="elastic_search_status">
-          <colorPalette type="list">[#65A637,#F7BC38,#D93F3C]</colorPalette>
-          <scale type="threshold">1.1,2.1</scale>
-        </format>
-        <format type="color" field="spark_status">
-          <colorPalette type="list">[#65A637,#F7BC38,#D93F3C]</colorPalette>
-          <scale type="threshold">1.1,2.1</scale>
-        </format>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <title>Recent API Calls</title>
       <table>
         <search>
-          <query>index = "allrequests" | table query_id, request_time, response_time, number_of_queries, component_name, success_flag | head 10</query>
+          <query>index = "allrequests" | table query_id, request_time, response_time, number_of_queries, component_name, success_flag $field1$ | head 10</query>
           <earliest>0</earliest>
           <sampleRatio>1</sampleRatio>
         </search>
@@ -574,6 +595,10 @@
         <option name="rowNumbers">false</option>
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
+        <format type="color" field="success_flag">
+          <colorPalette type="list">[#65A637,#6DB7C6,#F7BC38,#F58F39,#D93F3C]</colorPalette>
+          <scale type="threshold">0,30,70,100</scale>
+        </format>
       </table>
     </panel>
   </row>
