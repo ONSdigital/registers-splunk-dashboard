@@ -1,10 +1,21 @@
-# splunk-api
+# Splunk Performance Dashboard
 
-## Sending test data to Splunk:
+### Prerequisites
+* Python (2.7 or higher)
+* Splunk
+
+### Development Setup (MacOs)
+To consruct and to view the dashboards locally;
+
+1. Copy the view into the views directory under the local splunk search directory (search/local/data/ui/views)
+
+2. Copy the scripts held in the subfolder into the local static directory (search/appserver/static)
+
+### Running:
 
 1. Install the Splunk-SDK using Pip
 
-```python
+```
 pip install splunk-sdk 
 ```
 
