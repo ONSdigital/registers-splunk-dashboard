@@ -1,5 +1,5 @@
 <form script="table_icons_rangemap.js, tokenlinks.js" stylesheet="table_cell_highlighting.css, table_decorations.css">
-  <label>Performance Dashboard</label>
+  <label>Performance Dashboard 2 - Reporting Dashboard</label>
   <description>Test Dashboard - NO JavaScript, XML Modified</description>
   <fieldset autoRun="true" submitButton="false">
     <input type="time" token="time" searchWhenChanged="true">
@@ -26,7 +26,7 @@
       <title>System Uptime</title>
       <single>
         <search>
-          <query>index="allrequests"| stats first(uptime) as Uptime</query>
+          <query>index="performance"| stats first(uptime) as Uptime</query>
           <earliest>0</earliest>
           <latest></latest>
           <refresh>30s</refresh>
@@ -49,7 +49,7 @@
       <title>Total Calls</title>
       <single>
         <search>
-          <query>index = "allrequests" | stats count as "Total API Requests"</query>
+          <query>index = "performance" | stats count as "Total API Requests"</query>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
@@ -72,7 +72,7 @@
       <title>Real Time Number of Calls</title>
       <single>
         <search>
-          <query>index = "allrequests" | timechart count as "Total API Requests" span=1d | fillnull value=NULL</query>
+          <query>index = "performance" | timechart count as "Total API Requests" span=1d | fillnull value=NULL</query>
           <earliest>0</earliest>
         </search>
         <!--threshold - if over 25% or at -20% flagged as red-->
@@ -142,7 +142,7 @@
         <option name="showTrendIndicator">1</option>
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
-        <option name="underLabel">Total Index Size (inc.allrequests)</option>
+        <option name="underLabel">Total Index Size (inc.performance)</option>
         <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
@@ -178,8 +178,8 @@
         <title>Overall API Requests (trend line shows average-&gt; global set)</title>
         <search>
           <query>index = "allrequests" | timechart count as "Total API Requests" | $predict_switch$</query>
-          <earliest>$earliest$</earliest>
-          <latest>$latest$</latest>
+          <earliest>0</earliest>
+          <latest></latest>
         </search>
         <option name="charting.axisTitleX.text">Date</option>
         <option name="charting.axisTitleY.text">Total Number of Queries</option>
@@ -194,7 +194,9 @@
       <chart depends="$showInternal29$">
         <title>Total Number of API calls per key</title>
         <search>
-          <query>index = "allrequests" | timechart count as "Number of Queries" by component_name</query>
+          <query>index = "performance" | timechart count as "Number of Queries" by component_name</query>
+          <earliest>@d</earliest>
+          <latest>now</latest>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
@@ -218,7 +220,6 @@
         <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
         <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
         <option name="charting.legend.placement">right</option>
-
       </chart>
       <html depends="$showInternal29$">
                 <button class="btn" data-set-token="show_overview" data-value="show">Show Overview</button>
@@ -228,7 +229,7 @@
       <chart>
         <title>Volume of Call per Key</title>
         <search>
-          <query>index = "allrequests" | stats count as "Total API Requests" by component_name</query>
+          <query>index = "performance" | stats count as "Total API Requests" by component_name</query>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -267,8 +268,8 @@
       <chart>
         <title>Total Successful and Failed API Calls</title>
         <search>
-          <query>index = "allrequests" | timechart count as "Number of Queries" by success_flag</query>
-          <earliest>@w1</earliest>
+          <query>index = "performance" | timechart count as "Number of Queries" by success_flag</query>
+          <earliest>@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
@@ -307,7 +308,7 @@
       <table>
         <title>Results of API Requests Statuses</title>
         <search>
-          <query>index = "allrequests" | stats count(success_flag) as "Number of Successes or Failures" by component_name, success_flag</query>
+          <query>index = "performance" | stats count(success_flag) as "Number of Successes or Failures" by component_name, success_flag</query>
           <earliest>@d</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -321,8 +322,8 @@
         <option name="wrap">true</option>
       </table>
       <html>
-                <button class="btn" data-unset-token="show_details">Hide Details</button>
-            </html>
+        <button class="btn" data-unset-token="show_details">Hide Details</button>
+      </html>
     </panel>
   </row>
   <row>
@@ -330,7 +331,7 @@
       <title>API Request Types</title>
       <input type="link" token="needed">
         <label>Choose a view type:</label>
-        <choice value="link44">Ovewview</choice>
+        <choice value="link44">Overview</choice>
         <choice value="link55">Over Time</choice>
         <default>Table</default>
         <change>
@@ -347,7 +348,7 @@
       <chart depends="$showInternal2$">
         <title>Total Request Type</title>
         <search>
-          <query>index = "allrequests" | stats count as "Total API Requests" by query_type $field1$</query>
+          <query>index = "performance" | stats count as "Total API Requests" by query_type $field1$</query>
           <earliest>@d</earliest>
           <latest>now</latest>
         </search>
@@ -356,8 +357,8 @@
       <chart depends="$showSplunkd2$">
         <title>Request Type Over time (This Week)</title>
         <search>
-          <query>index = "allrequests" | timechart count as "Number of Queries" by query_type</query>
-          <earliest>@w0</earliest>
+          <query>index = "performance" | timechart count as "Number of Queries" by query_type</query>
+          <earliest>@d</earliest>
           <latest>now</latest>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -436,9 +437,9 @@
       <table depends="$showInternal22$">
         <title>Request and Response Time - Single Match</title>
         <search>
-          <query>index = "allrequests"
-| eval request = strptime(request_time, "%H:%M:%S")
-| eval response = strptime(response_time, "%H:%M:%S")
+          <query>index = "performance"
+| eval request = strptime(request_time, "%H:%M:%S") 
+| eval response = strptime(response_time, "%H:%M:%S") 
 | eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "single" $field1$
 | table query_id, request_time, response_time, Difference</query>
           <earliest>$earliest$</earliest>
@@ -460,9 +461,9 @@
       <table depends="$showSplunkd22$">
         <title>Request and Response Time - Bulk Match</title>
         <search>
-          <query>index = "allrequests"
-| eval request = strptime(request_time, "%H:%M:%S")
-| eval response = strptime(response_time, "%H:%M:%S")
+          <query>index = "performance"
+| eval request = strptime(request_time, "%H:%M:%S") 
+| eval response = strptime(response_time, "%H:%M:%S") 
 | eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "bulk" $field1$
 | table query_id, request_time, response_time, Difference</query>
           <earliest>$earliest$</earliest>
@@ -484,9 +485,9 @@
       <table id="table2" depends="$showSplunkd32$">
         <title>Ingess Start Time and End Ingress Time</title>
         <search>
-          <query>index = "allrequests"
-              | eval request = strptime(request_time, "%H:%M:%S")
-              | eval response = strptime(response_time, "%H:%M:%S")
+          <query>index = "performance"
+              | eval request = strptime(request_time, "%H:%M:%S") 
+              | eval response = strptime(response_time, "%H:%M:%S") 
               | eval diff = tostring( (response - request), "duration") | eval Difference = replace(diff,"(\d+)\:(\d+)\:(\d+)"," \3") | where query_type = "single" $field1$
               | table query_id, request_time, response_time, Difference, success_flag
               | rename "query_id" as "Query ID", "request_time" as "Start Time", "response_time" as "End time", "success_flag" as "Success Flag"</query>
@@ -515,6 +516,9 @@
     </panel>
     <panel>
       <title>Data Volume and Component Availability</title>
+      <!--<html>            -->
+      <!--   <a href="/app/search/appserver/static/system_component"><h3>System Component</h3></a>-->
+      <!-- </html>-->
       <input type="link" token="needed">
         <label>Choose a view type:</label>
         <choice value="link4">Table</choice>
@@ -534,20 +538,17 @@
       <table depends="$showInternal$">
         <title>Data Record Request From Users (Today)</title>
         <search>
-          <query>index = "allrequests" |   stats sparkline count, sum(data_returned) by component_name | sort -sum(data_returned)</query>
-          <earliest>-24h</earliest>
+          <query>index = "performance" |   stats sparkline count, sum(data_returned) by component_name | sort -sum(data_returned)</query>
+          <earliest>@d</earliest>
           <latest>now</latest>
         </search>
       </table>
-      <!--<html>            -->
-      <!--   <a href="/app/search/appserver/static/system_component"><h3>System Component</h3></a>-->
-      <!-- </html>-->
       <table id="table1" depends="$showInternal$">
         <title>System Component Status (Real - Time)</title>
         <search>
-          <query>index="allrequests" | head 1|  stats sum(hdfs_status) as "HDFS Status", sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(spark_status) as "Spark Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>
-          <earliest>rt</earliest>
-          <latest>rt</latest>
+          <query>index="performance" | head 1|  stats sum(hdfs_status) as "HDFS Status", sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(spark_status) as "Spark Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>
+          <earliest>@d</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">20</option>
@@ -558,17 +559,15 @@
         <option name="totalsRow">false</option>
         <option name="wrap">true</option>
         <drilldown>
-          <link>
-            system_component
-            </link>
-          </drilldown>
+          <link>system_component</link>
+        </drilldown>
       </table>
       <chart depends="$showSplunkd$">
         <title>Graph of Data Record Request From Users (This Week)</title>
         <search>
-          <query>index = "allrequests" | timechart sum(data_returned) by component_name</query>
-          <earliest>-7d@w0</earliest>
-          <latest>@w0</latest>
+          <query>index = "performance" | timechart sum(data_returned) by component_name</query>
+          <earliest>@d</earliest>
+          <latest>now</latest>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">-90</option>
         <option name="charting.axisTitleX.text">Date</option>
@@ -584,7 +583,7 @@
       <title>Recent API Calls</title>
       <table>
         <search>
-          <query>index = "allrequests" | table query_id, request_time, response_time, number_of_queries, component_name, success_flag $field1$ | head 10</query>
+          <query>index = "performance" | table query_id, request_time, response_time, number_of_queries, component_name, success_flag $field1$ | head 10</query>
           <earliest>0</earliest>
           <sampleRatio>1</sampleRatio>
         </search>
