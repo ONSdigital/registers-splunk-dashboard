@@ -1,5 +1,5 @@
 <dashboard stylesheet="trafficlight.css">
-  <label>AlphaDemo</label>
+  <label>Live Dashboard</label>
   <description>This is the demo dashboard for the Alpha proof of concept.</description>
   <row>
     <panel>
@@ -11,6 +11,7 @@
           <latest></latest>
         </search>
         <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
         <option name="height">131</option>
         <option name="numberPrecision">0.0</option>
         <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
@@ -54,10 +55,13 @@
           <refreshType>delay</refreshType>
         </search>
         <option name="colorMode">block</option>
-        <option name="drilldown">none</option>
+        <option name="drilldown">all</option>
+        <option name="linkFields">underlabel, afterlabel</option>
+        <option name="linkView">drilldown</option>
         <option name="height">131</option>
         <option name="rangeColors">["0x65a637","0xf58f39","0xd93f3c"]</option>
         <option name="rangeValues">[1.1,21]</option>
+        <option name="underLabel">dashboard</option>
         <option name="unit">%</option>
         <option name="useColors">1</option>
       </single>
@@ -67,8 +71,8 @@
         <title>Single Match Time (s)</title>
         <search>
           <query>index="performance" | timechart avg(single_match_time) as single_match_time</query>
-          <earliest>rt-1h</earliest>
-          <latest>rt</latest>
+          <earliest>0</earliest>
+          <latest></latest>
           <refresh>30s</refresh>
           <refreshType>delay</refreshType>
         </search>
@@ -85,8 +89,8 @@
         <title>Bulk Match Time (s)</title>
         <search>
           <query>index="performance" | timechart avg(bulk_match_time) as BulkMatchTime</query>
-          <earliest>rt-1h</earliest>
-          <latest>rt</latest>
+          <earliest>0</earliest>
+          <latest></latest>
           <refresh>30s</refresh>
           <refreshType>delay</refreshType>
         </search>
@@ -102,7 +106,7 @@
   <row>
     <panel>
       <single>
-        <title>Elastic Status</title>
+        <title>ElasticSearch Status</title>
         <search>
           <query>index="performance"| stats first(elastic_search_status) as value | rangemap field=value none=0-0 low=1-1 elevated=2-2 severe=3-3 default=none</query>
           <earliest>-15m</earliest>
@@ -112,9 +116,8 @@
         </search>
         <option name="classField">range</option>
         <option name="field">value</option>
-        <option name="height">125</option>
+        <option name="height">99</option>
         <option name="unit">- Elastic</option>
-        <option name="unitPosition">after</option>
       </single>
     </panel>
     <panel>
@@ -129,7 +132,7 @@
         </search>
         <option name="classField">range</option>
         <option name="field">value</option>
-        <option name="height">123</option>
+        <option name="height">114</option>
         <option name="unit">- Spark</option>
       </single>
     </panel>
@@ -145,7 +148,7 @@
         </search>
         <option name="classField">range</option>
         <option name="field">value</option>
-        <option name="height">135</option>
+        <option name="height">109</option>
         <option name="unit">- HDFS</option>
         <option name="unitPosition">after</option>
       </single>
@@ -162,7 +165,7 @@
         </search>
         <option name="classField">range</option>
         <option name="field">value</option>
-        <option name="height">131</option>
+        <option name="height">110</option>
         <option name="unit">- Flume</option>
       </single>
     </panel>
@@ -172,23 +175,33 @@
       <chart>
         <title>Percentage Availability over the past 8 hours</title>
         <search>
-          <query>index="performance"| stats first(availability) as Availability(%) by _time</query>
-          <earliest>rt-1h</earliest>
-          <latest>rt</latest>
+          <query>index = "performance" | timechart first(availability) as "Availability (%)"</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
           <refresh>30s</refresh>
           <refreshType>delay</refreshType>
         </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisY.maximumNumber">100</option>
         <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
         <option name="height">248</option>
+        <drilldown>
+          <link>
+            <link target="app/javascript_on_dashboards/dashboards">app/javascript_on_dashboards/dashboards</link>
+          </link>
+        </drilldown>
       </chart>
     </panel>
     <panel>
       <chart>
         <title>Amount of Data Returned by Query (Mb)</title>
         <search>
-          <query>index="performance"| stats first(data_returned) as DataReturned by _time</query>
-          <earliest>rt-1h</earliest>
-          <latest>rt</latest>
+          <query>index="performance"| timechart first(data_returned) as DataReturned</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
           <refresh>30s</refresh>
           <refreshType>delay</refreshType>
         </search>
@@ -201,26 +214,28 @@
       <chart>
         <title>Cumulative Number of Queries</title>
         <search>
-          <query>index="performance"| stats first(number_of_queries) as Number_of_queries by _time | reverse | accum Number_of_queries as totalvalue</query>
-          <earliest>@d</earliest>
+          <query>index="performance"| timechart first(number_of_queries) as Number_of_queries | accum Number_of_queries as totalvalue</query>
+          <earliest>-4h@m</earliest>
           <latest>now</latest>
           <refresh>30s</refresh>
           <refreshType>delay</refreshType>
         </search>
         <option name="charting.chart">line</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
     </panel>
     <panel>
       <chart>
         <title>Time to Ingest</title>
         <search>
-          <query>index="performance"| stats first(time_to_ingest) as TimeToIngest by _time</query>
-          <earliest>rt-1h</earliest>
-          <latest>rt</latest>
+          <query>index="performance"| timechart first(time_to_ingest) as TimeToIngest</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
           <refresh>30s</refresh>
           <refreshType>delay</refreshType>
         </search>
         <option name="charting.chart">area</option>
+        <option name="charting.legend.placement">bottom</option>
       </chart>
     </panel>
   </row>
