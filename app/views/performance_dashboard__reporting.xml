@@ -1,0 +1,581 @@
+<form script="table_icons_rangemap.js, tokenlinks.js" stylesheet="table_cell_highlighting.css, table_decorations.css">
+  <label>Performance Dashboard - Reporting Dashboard</label>
+  <description>Test Dashboard - NO JavaScript</description>
+  <!--
+  @function Fieldset
+
+  @filter {Choice} api_id - identifier of the project being used and their respective logs
+  @filter {Choice} env_id - indentifier of the environment of the particular project
+  @filter {Choice} organisation_id - strict the logs to focus on the only log of certain user bands
+  @filter {Choice} time_setter - change timeframe of certain selected panels with time-setter token
+
+  @description - A series of global filters that affect the set of panels and manipulate the log data
+  through set params. When changed it will trigger and replace the inputs using the token as anchars and
+  substitute the value with the new value
+  -->
+  <fieldset autoRun="true" submitButton="false">
+    <input type="dropdown" searchWhenChanged="true" token="api_id">
+      <label>Set API Type/ Project</label>
+      <choice value="| where api = &quot;index.business&quot;">Business Index (BI)</choice>
+      <choice value="| where api = &quot;index.address&quot;">Address Index (AI)</choice>
+      <choice value="| where api = &quot;index-sbr&quot;">Statistical Business Register (SBR)</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where api = "index.business"</default>
+    </input>
+    <input type="dropdown" searchWhenChanged="true" token="env_id">
+      <label>Set Environment</label>
+      <choice value="| where env = &quot;test&quot;">Testing</choice>
+      <choice value="| where env = &quot;beta&quot;">Production</choice>
+      <choice value="| where env = &quot;dev&quot;">Development</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where env = "dev"</default>
+    </input>
+    <input type="dropdown" token="organisation_id" searchWhenChanged="true">
+      <label>Set Organisation</label>
+      <choice value="">All</choice>
+      <choice value="| where organisation=&quot;ONS&quot;">ONS</choice>
+      <choice value="| where organisation=&quot;HMRC&quot;">HMRC</choice>
+      <choice value="| where organisation=&quot;HSE&quot;">HSE</choice>
+      <choice value="| where organisation=&quot;AppLevy&quot;">App Levy</choice>
+      <choice value="| where organisation=&quot;ScottishGovernment&quot;">Scottish Government</choice>
+      <choice value="| where organisation=&quot;BEIS&quot;">BEIS</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where organisation="ONS"</default>
+    </input>
+    <input type="time" token="time_setter" searchWhenChanged="true">
+      <label>Set Time</label>
+      <default>
+        <earliest>@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>System Uptime</title>
+      <single>
+        <search>
+          <query>index="api_gw_collect_std"  sourcetype="bi-api-health-log" | head 1 | rex "Uptime: (?&lt;uptime&gt;[^]*) Date and Time:(?&lt;datetime&gt;[^ ]*)" | eval inSec = uptime / 1000 | eval temp_time = tostring(inSec, "duration") | eval formatted_uptime=replace(temp_time,"(\d*)\+*(\d+):(\d+):(\d+).(\d+)", "\2 hours \3 minutes \4 seconds") | table formatted_uptime</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">API Uptime (HH:MM:SS)</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Calls</title>
+      <single>
+        <search>
+          <query>index="api_gw_collect_std" sourcetype="api-gw-syslog"  $api_id$ $env_id$  | stats count</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+       <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Total API Requests [Drilldown]</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <link>company_report</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <title>Real Time Number of Calls</title>
+      <single>
+        <search>
+          <query>index = "api_gw_collect_std"  sourcetype="api-gw-syslog" $api_id$ $env_id$  | timechart count as "Total API Requests" | fillnull value=NULL</query>
+          <earliest>@w0</earliest>
+          <latest>now</latest>
+        </search>
+        <!-- COMPARISON THRESHOLD
+        if over 25% or at -20% flagged as red
+        -->
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="height">143</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xf7bc38","0xd93f3c"]</option>
+        <option name="rangeValues">[-20,25]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">-7d</option>
+        <option name="underLabel">Compared to Last 7 Days Ago</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <title>Total Index Size</title>
+      <single>
+        <search>
+          <query>| eventcount summarize=false report_size=true index="api_gw_collect_std" | eval Memory Size = size_bytes / 1000000000| stats sum(Memory Size)</query>
+          <earliest>1482310920</earliest>
+          <latest>1482311040</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0.0000</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Total Index Size</option>
+        <option name="unit">Gb</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <link>licence_and_storage_usage</link>
+        </drilldown>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Volume of Requests</title>
+      <!--
+      @description - the toggles allow the user to switch on the predict feature which forcasts total volume of requests
+      for the next week by evaluating the current and previous week (this can all be altered by editing the predict script)
+
+      @toggle Off - continue with the default average line (which is computed using all non-zero values)
+      @toggle On - initiate predict and overalys the predict forcast on top of last weeks data
+      -->
+      <!--
+      @feature: JS button
+
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall
+      user group usage.
+      -->
+      <input type="link" token="needed">
+        <label>Choose a view type:</label>
+        <choice value="link4444">Separated</choice>
+        <choice value="link5555">Overview</choice>
+        <default>Seperated</default>
+        <change>
+          <condition value="link4444">
+            <set token="showInternal29">true</set>
+            <unset token="showSplunkd29"></unset>
+          </condition>
+          <condition value="link5555">
+            <unset token="showInternal29"></unset>
+            <set token="showSplunkd29">true</set>
+          </condition>
+        </change>
+      </input>
+      <input type="radio" token="predict_switch" searchWhenChanged="true" depends="$showSplunkd29$">
+        <label>Predict Toggle:</label>
+        <default>Off</default>
+        <choice value="replace 0 WITH NULL | eventstats avg(&quot;Total API Requests&quot;) AS Average">Off</choice>
+        <choice value="predict &quot;Total API Requests&quot; future_timespan=30 holdback=1 ">On</choice>
+      </input>
+      <chart depends="$showSplunkd29$">
+        <title>Total All Requests</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$  | timechart count as "Total API Requests" | $predict_switch$</query>
+          <earliest>-14d@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleY.text">Total Number of Queries</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.overlayFields">Average</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.fieldColors">{"Total API Requests": 0x2B9954, "Average":0xDC143C}</option>
+        <option name="charting.legend.masterLegend">null</option>
+        <option name="height">300</option>
+      </chart>
+      <chart depends="$showInternal29$">
+        <title>Individual requests overtime</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$   | timechart count as "Number of Queries" by organisation usenull=f</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
+        <option name="charting.axisTitleX.text">Date and Time</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Number of Queries</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.rangeValues">[]</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+      <html depends="$showInternal29$">
+          <button class="btn" data-set-token="show_overview" data-value="show">Show Overview</button>
+      </html>
+    </panel>
+    <panel depends="$show_overview$">
+      <!--
+      @feature: JS button
+
+      @description - when pressed the panel returns back to its original state show the initial graph in full scope
+      -->
+      <chart>
+        <title>Volume of Requests Distribution</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$  | stats count as "Total API Requests" by organisation</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisEnd</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="height">343</option>
+      </chart>
+      <html depends="$show_overview$">
+        <button class="btn" data-unset-token="show_overview">Hide Details</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Response Statuses - Errors and Successes</title>
+      <!--
+      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are
+      computed for all requests status types.
+      @choice {radio} On - Typically displays average lines on the graph for each response status
+      @choice {radio} Off - The grapph without a average lines
+      -->
+      <!--
+      @feature: JS button
+
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall
+      user group usage.
+      -->
+      <input type="radio" token="result_status_average_switch" searchWhenChanged="true">
+        <label>Average Line Toggle:</label>
+        <default>Off</default>
+        <choice value="eventstats avg(&quot;Success&quot;) AS &quot;Average Successes&quot; | eventstats avg(&quot;Failed&quot;) AS &quot;Average Failed&quot;">On</choice>
+        <choice value="">Off</choice>
+      </input>
+      <chart>
+        <title>Response Statuses Overtime</title>
+        <search>
+          <query>index = "api_gw_collect_std" $api_id$ $env_id$   |  replace 200 WITH "Success" IN request_status |  replace 400 WITH "Failed" IN request_status  | replace 404 WITH "Failed" IN request_status  | replace 503 WITH "Failed" IN request_status   | replace 401 WITH "Failed" IN request_status  | replace 500 WITH "Failed" IN request_status  | timechart count as "Number of Queries" by request_status usenull=f | replace 0 WITH NULL | $result_status_average_switch$</query>
+          <earliest>-14d@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleY.text">Total Number of Queries</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.overlayFields">"Average Successes", "Average Failed"</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.fieldColors">{"Success":0x2B9954, "Failed":0xDC143C}</option>
+        <option name="charting.legend.masterLegend">null</option>
+        <option name="height">300</option>
+      </chart>
+      <html>
+        <button class="btn" data-set-token="show_details_request_type" data-value="show">Show Details</button>
+      </html>
+    </panel>
+    <panel depends="$show_details_request_types$">
+      <!--
+      @feature: JS button
+
+      @description - when pressed the panel returns back to its original state show the initial graph in full scope
+      -->
+      <table>
+        <title>Overall Request Status Overview</title>
+        <search>
+          <query>index = "api_gw_collect_std"   $api_id$ $env_id$    |  replace 200 WITH "Success" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status | stats count(request_status) as "Number of Successes or Failures" by organisation, request_status</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+      </table>
+      <html>
+        <button class="btn" data-unset-token="show_details_request_type">Hide Details</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Query Type and Version</title>
+      <!--
+      @feature: JS button
+
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the proportion of
+      different types of request and versions being utilised.
+      -->
+      <chart>
+        <title>Request Type Overtime</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$ | replace "*/search" WITH "Search" IN query_type |  replace "*/search/" WITH "Search" IN query_type |  timechart count as "Number of Queries" by query_type usenull=f</query>
+          <earliest>@w1</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleY.text">Volume</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.showDataLabels">none</option>
+      </chart>
+      <html>
+        <button class="btn" data-set-token="show_details_query_type" data-value="show">Show Details</button>
+      </html>
+    </panel>
+    <panel depends="$show_details_query_types$">
+      <!--
+      @feature: JS button
+
+      @description - when pressed the panel returns back to its original state show the initial graph in full scope
+      -->
+      <chart>
+        <title>Distribution of Query Type and Version Usage</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$   | replace "*/search" WITH "Search" IN query_type |  replace "*/search/" WITH "Search" IN query_type   $organisation_id$ |   stats count(query_type) by query_type</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+      </chart>
+      <html>
+        <button class="btn" data-unset-token="show_details_query_type">Hide Details</button>
+      </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Data Volume and Component Availability</title>
+      <!--<html>            -->
+      <!--   <a href="/app/search/appserver/static/system_component"><h3>System Component</h3></a>-->
+      <!-- </html>-->
+      <!--
+      @tab Data Usage - A table of all user groups usage and a graph to show memory usage and number of records returned over time.
+      @tab Availability - A table of all the components of the system with a symbolic indicator
+      -->
+      <!--
+      @description - A (local) filter to change the memory unit type for the table to make it more legible in some instances.
+
+      @option Data Usage - A table of all user groups usage and a graph to show memory usage and number of records returned over time.
+      @opion Availability - A table of all the components of the system with a symbolic indicator
+      -->
+      <!--
+      @description - A (local) filter to change the data measurement type for the y axis of the graph.
+
+      @option Output Size - Changes the y axis to the data returned in memory unit (kb)
+      @opion Records Returned - Changes the y axis to the number of records returned
+      -->
+      <input type="link" token="needed">
+        <label>Choose property:</label>
+        <choice value="link4">Data Usage</choice>
+        <choice value="link5">Availability</choice>
+        <default>Data Usage</default>
+        <change>
+          <condition value="link4">
+            <set token="showInternal">true</set>
+            <unset token="showSplunkd"></unset>
+          </condition>
+          <condition value="link5">
+            <unset token="showInternal"></unset>
+            <set token="showSplunkd">true</set>
+          </condition>
+        </change>
+      </input>
+      <input type="dropdown" searchWhenChanged="true" token="memory_unit_1">
+        <label>Set Memory Unit</label>
+        <choice value="| eval conversion = output_size / 1000 | eval unit_type= &quot; Kb&quot;">Kilobytes (Kb)</choice>
+        <choice value="| eval conversion = (output_size/1000)/1000 | eval unit_type= &quot; Mb&quot;">Megabytes (Mb)</choice>
+        <choice value="| eval conversion = ((output_size/ 1000)/1000)/1000 | eval unit_type= &quot; Gb&quot;">Gigabytes (Gb)</choice>
+        <fieldForLabel>Label</fieldForLabel>
+        <fieldForValue>Value</fieldForValue>
+        <default>| eval conversion = (output_size/1000)/1000 | eval unit_type= " Mb"</default>
+      </input>
+      <input type="dropdown" searchWhenChanged="true" token="graphing_type">
+        <label>Set Y Axis</label>
+        <choice value="output_size">Output Size</choice>
+        <choice value="records_returned">Records Returned</choice>
+        <fieldForLabel>Label</fieldForLabel>
+        <fieldForValue>Value</fieldForValue>
+        <default>records_returned</default>
+      </input>
+      <table depends="$showInternal$">
+        <title>Data Requests Overview [Drilldown]</title>
+        <search>
+          <query>index = "api_gw_collect_std" $api_id$ $env_id$ $memory_unit_1$ | stats  sparkline count,  sum(records_returned) AS "Total Records Returned", sum(conversion) AS computed_output by organisation | eval computed_output = tostring(computed_output)  |  rename organisation AS "Organisation Name", sparkline AS "Sparkline", count AS "Total Requests", computed_output AS "Output Size" | sort -"Total Records Returned"</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+        </search>
+        <option name="drilldown">row</option>
+        <format type="number" field="Output Size (mb)">
+          <option name="precision">4</option>
+        </format>
+        <drilldown>
+          <link>company_report</link>
+        </drilldown>
+      </table>
+      <chart depends="$showInternal$">
+        <title>Data Graph Per User (Measured Based on Selected Data Type)</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$  | timechart sum($graphing_type$) AS "Sum of Total Number of Records Returned" by organisation</query>
+          <earliest>-48h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-90</option>
+        <option name="charting.axisTitleX.text">Date and Time</option>
+        <option name="charting.axisTitleY.text">Data Volume</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="height">461</option>
+      </chart>
+      <table id="table1" depends="$showSplunkd$">
+        <title>System Component Status (Real - Time)</title>
+        <search>
+          <query>index="api_gw_collect_std" | head 1|  sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(api_status) as "Api_Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>
+          <earliest>@d</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">row</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <drilldown>
+          <link>infastructure</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Recent Requests</title>
+      <!--
+      @description - A set of filters to help display the data in more of a meaniful way
+
+      @choice-group Memory unit - Changes the y axis to the data returned in memory unit (kb)
+      @choice-group query type - to filter and display log and interaction with the api thats of certain type of query
+      -->
+      <input type="dropdown" searchWhenChanged="true" token="memory_unit_init">
+        <label>Set Memory Unit</label>
+        <choice value="| eval computed_output = tostring(output_size/1000) + &quot; Kb&quot;">Kilobytes (Kb)</choice>
+        <choice value="| eval computed_output = tostring((output_size / 1000) / 1000)+ &quot; Mb&quot;">Megabytes (Mb)</choice>
+        <choice value="| eval computed_output = tostring(((output_size / 1000) / 1000) /1000 ) + &quot; Gb&quot;">Gigabytes (Gb)</choice>
+        <fieldForLabel>Label</fieldForLabel>
+        <fieldForValue>Value</fieldForValue>
+        <default>| eval computed_output = tostring((output_size / 1000) / 1000)+ " Mb"</default>
+      </input>
+      <input type="dropdown" searchWhenChanged="true" token="query_type_filter">
+        <label>Set Query Type</label>
+        <choice value="| regex query_type = &quot;^/.*/bi/v1/search&quot;">Search</choice>
+        <choice value="| regex query_type = &quot;^/.*/bi/v1/ingress&quot;">Ingress</choice>
+        <choice value="">All</choice>
+        <fieldForLabel>Label</fieldForLabel>
+        <fieldForValue>Value</fieldForValue>
+        <default>| regex query_type = "^/.*/bi/v1/search"</default>
+      </input>
+      <table>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$  $env_id$  $organisation_id$ $memory_unit_init$  $query_type_filter$  | replace "*/search" WITH "Search" IN query_type |  replace "*/search/" WITH "Search" IN query_type | replace "*/ingress" WITH "Ingress" IN query_type | replace 200 WITH "Success: Ok (200)" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  |  replace 404 WITH "Failed: Not Found (404)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status | eval start_date = substr(start_time, 1,10) | eval end_date = substr(end_time, 1,10) | eval start_substr = substr(start_time, len(start_time)-12,12) | eval end_substr = substr(end_time, len(end_time)-12,12) | eval start_strf = strptime(start_substr, "%H:%M:%S.%3N") | eval end_strf = strptime(end_substr, "%H:%M:%S.%3N") | eval temp_math = tostring( (end_strf - start_strf), "duration") | eval difference = replace (temp_math, "(\d+)\:(\d+)\:(\d+)"," \3") | eval concat_start =  start_date + " " +  start_substr | eval concat_end =  end_date + " " +  end_substr | table GUID, organisation, concat_start, concat_end, difference, query_type, records_returned, computed_output, request_status | rename GUID AS "Request ID", concat_start AS "Requests Date and Time", concat_end AS "Response Date and Time", query_type AS "Query Type", records_returned AS "Number of Records Returned", computed_output AS "Output Size", request_status AS "Request Result", difference AS "Time taken to Finish", organisation AS "Organisation"</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">true</option>
+        <option name="totalsRow">true</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Request Result">
+          <colorPalette type="map">{"Success: Ok (200)":#65A637,"Failed: Internal Server Error (500)":#D93F3C,"Failed: Bad Request (400)":#D93F3C,"Failed: Not Found (404)":#D93F3C}</colorPalette>
+        </format>
+        <format type="number" field="Output Size (mb)">
+          <option name="precision">4</option>
+          <option name="unit">mb</option>
+        </format>
+        <format type="color" field="Time taken to Finish">
+          <colorPalette type="list">[#65A637,#F7BC38,#D93F3C]</colorPalette>
+          <scale type="threshold">0.5,1</scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>

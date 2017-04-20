@@ -1,0 +1,175 @@
+<form>
+  <label>Individual Company Report</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="field2">
+      <label>Choose a timeframe:</label>
+      <default>
+        <earliest></earliest>
+        <latest></latest>
+      </default>
+    </input>
+    <input type="dropdown" searchWhenChanged="true" token="api_id">
+      <label>API Type/ Project</label>
+      <choice value="| where api = &quot;index.business&quot;">Business Index (BI)</choice>
+      <choice value="| where api = &quot;index.address&quot;">Address Index (AI)</choice>
+      <choice value="| where api = &quot;index-sbr&quot;">Statistical Business Register (SBR)</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where api = "index.business"</default>
+    </input>
+    <input type="dropdown" token="company">
+      <label>Choose a company:</label>
+      <choice value="&quot;Company_House&quot; OR component_name=&quot;HMRC&quot; OR component_name=&quot;Welsh_Assembly&quot; OR component_name=&quot;Crown_Commercial&quot;">Overall</choice>
+      <choice value="&quot;HMRC&quot;">HMRC</choice>
+      <choice value="&quot;Company_House&quot;">Company's House</choice>
+      <choice value="&quot;Crown_Commercial&quot;">Crown Commercial</choice>
+      <choice value="&quot;Welsh_Assembly&quot;">Welsh Assembly</choice>
+      <choice value="&quot;ONS&quot;">Office For National Statistics</choice>
+      <default>"ONS"</default>
+    </input>
+    <input type="text" token="field3">
+      <label>Set a threshold:</label>
+      <default>500</default>
+      <initialValue>500</initialValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$  | eval api="index.business" | eval test="Organisation: " + $company$ | table test</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="height">82</option>
+        <option name="rangeColors">["0x555","0x555"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Total Number of Requests</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ |where organisation=$company$ |stats count(request_status)|</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x555","0x555"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Amount of Data Returned</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ |where organisation=$company$| stats sum(records_returned)</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x6db7c6","0x6db7c6"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="unit">Bytes</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Number of Success's</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ |where organisation=$company$| stats count by request_status| where request_status=200| fields count</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0x65a637","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Number of Fail's</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ |where organisation=$company$| stats count by request_status| where request_status=500 OR request_status=400 or request_status=404| fields count</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="rangeColors">["0xd93f3c","0xd93f3c"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Data Usage</title>
+      <input type="link" token="needed">
+        <label>Choose Data Usgae View</label>
+        <choice value="link4">Records</choice>
+        <choice value="link5">Data</choice>
+        <default>link4</default>
+        <change>
+          <condition value="link4">
+            <set token="showDataUsageRecords">true</set>
+            <unset token="showDataUsageMemory"></unset>
+          </condition>
+          <condition value="link5">
+            <unset token="showDataUsageRecords"></unset>
+            <set token="showDataUsageMemory">true</set>
+          </condition>
+        </change>
+      </input>
+      <chart depends="$showDataUsageRecords$">
+        <title>Amount of Records Returned</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ |where records_returned &gt; 0  AND organisation=$company$| timechart span=5m avg(records_returned) as data | streamstats sum(data) as total| eval threshold = $field3$|</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Number of Records Returned</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.overlayFields">warning</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="height">472</option>
+      </chart>
+      <chart depends="$showDataUsageMemory$">
+        <title>Amount of Data Returned (Bytes)</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ |where records_returned &gt; 0  AND organisation=$company$|  timechart span=5m avg(output_size) as data | streamstats sum(data) as total | eval threshold = $field3$|</query>
+          <earliest>$field2.earliest$</earliest>
+          <latest>$field2.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Time</option>
+        <option name="charting.axisTitleY.text">Output Size (Bytes)</option>
+        <option name="charting.axisY.minimumNumber">0</option>
+        <option name="charting.axisY2.enabled">1</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.overlayFields">warning</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="height">472</option>
+      </chart>
+    </panel>
+  </row>
+</form>
