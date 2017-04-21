@@ -27,4 +27,4 @@ Note: You may not require sudo privileges for such trivial tasks.
 ### Notes:
 - `JavaScript actions` - Some actions may not be operational and thus require JavaScript files to be properly uploaded and modified if needed, please see Splunk documentation for more information.
 - `indexes` - The project uses a mixture of both index and sourcetype as identifiers to eliminate overhead.
-- `JavaScript actions` - The Rest plugin is used to capture health logs. You will need to configure a index.conf file in the collector to shoot data into the index.
+- `rest data input` - The Rest plugin is used to capture health logs. You will need to configure a index.conf file in the collector to shoot data into the index.
