@@ -1,4 +1,4 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0c2ec4f5e9ad4a96bca8033b5c54e66a)](https://www.codacy.com/app/ONS-Digital/business-index-ui?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ONSdigital/splunk-api&amp;utm_campaign=Badge_Grade) [![Bitbucket issues](https://img.shields.io/bitbucket/issues/ONSdigital/splunk-api.svg)]() [![license](https://img.shields.io/github/license/ONSdigital/splunk-api.svg)]() 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0c2ec4f5e9ad4a96bca8033b5c54e66a)](https://www.codacy.com/app/ONS-Digital/business-index-ui?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ONSdigital/splunk-api&amp;utm_campaign=Badge_Grade) [![Bitbucket issues](https://img.shields.io/bitbucket/issues/ONSdigital/splunk-api.svg)]() [![license](https://img.shields.io/github/license/ONSdigital/splunk-api.svg)]()
 
 # Splunk Performance Dashboard
 
@@ -27,4 +27,4 @@ Note: You may not require sudo privileges for such trivial tasks.
 ### Notes:
 - 'JavaScript actions' - Some actions may not be operational and thus require JavaScript files to be properly uploaded and modified if needed, please see Splunk documentation for more information.
 - 'indexes' - The project uses a mixture of both index and sourcetype as identifiers to eliminate overhead.
-- 'rest data input' - health check, collector???
+- 'rest data input' - The Rest plugin is used to capture health logs. You will need to configure a index.conf file in the collector to shoot data into the index.
