@@ -1,0 +1,263 @@
+<form>
+  <label>Live Dashboard</label>
+  <fieldset autoRun="true" submitButton="false">
+    <input type="time" token="time_setter" searchWhenChanged="true">
+      <label>Set Time (time_setter)</label>
+      <default>
+        <earliest>@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" searchWhenChanged="true" token="api_id">
+      <label>Set API Type/ Project (api_id)</label>
+      <choice value="| where api = &quot;index.business&quot;">Business Index (BI)</choice>
+      <choice value="| where api = &quot;index.address&quot;">Address Index (AI)</choice>
+      <choice value="| where api = &quot;index-sbr&quot;">Statistical Business Register (SBR)</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where api = "index.business"</default>
+    </input>
+    <input type="dropdown" searchWhenChanged="true" token="env_id">
+      <label>Set Environment (env_id)</label>
+      <choice value="| where env = &quot;test&quot;">Testing</choice>
+      <choice value="| where env = &quot;beta&quot;">Production</choice>
+      <choice value="| where env = &quot;dev&quot;">Development</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where env = "test"</default>
+    </input>
+    <input type="dropdown" token="organisation_id" searchWhenChanged="true">
+      <label>Set Organisation (organisation_id)</label>
+      <choice value="">All</choice>
+      <choice value="| where organisation=&quot;ONS&quot;">ONS</choice>
+      <choice value="| where organisation=&quot;HMRC&quot;">HMRC</choice>
+      <choice value="| where organisation=&quot;Crown&quot;">Crown Commercial</choice>
+      <choice value="| where organisation=&quot;Welsh&quot;">Welsh Assembly</choice>
+      <choice value="| where organisation=&quot;Company&quot;">Company House</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| where organisation="ONS"</default>
+    </input>
+    <input type="dropdown" searchWhenChanged="true" token="memory_unit_2">
+      <label>Set Size Unit</label>
+      <choice value="| eval computed_output = tostring(output_size/1000) + &quot; Kb&quot;">Kilobytes (Kb)</choice>
+      <choice value="| eval computed_output = tostring(output_size / 1000000)+ &quot; Mb&quot;">Megabytes (Mb)</choice>
+      <choice value="| eval computed_output = tostring(output_size / 1000000000) + &quot; Gb&quot;">Gigabytes (Gb)</choice>
+      <fieldForLabel>Label</fieldForLabel>
+      <fieldForValue>Value</fieldForValue>
+      <default>| eval computed_output = tostring(output_size/1000) + " Kb"</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Number of Requests</title>
+        <search>
+          <query>source="api-gw" $api_id$ $organisation_id$ $env_id$ |stats dc(GUID) as GUID123 by GUID | eventstats sum(GUID123) as Total| fields Total</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="height">83</option>
+        <option name="linkView">search</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x555","0x555"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <link>company_report</link>
+        </drilldown>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Number of Failed Requests</title>
+        <search>
+          <query>source="api-gw" $api_id$ $organisation_id$ $env_id$  |
+stats count by request_status |
+where request_status!=200 |
+eventstats sum(count) as FailsSum |
+eval bool = ifnull((FailsSum),0,FailsSum) |
+fields bool</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">none</option>
+        <option name="height">83</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd93f3c","0xd93f3c"]</option>
+        <option name="rangeValues">[100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Amount of Data Returned</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$ $organisation_id$ $env_id$ $memory_unit_2$ $memory_unit_2$ |where organisation="ONS" | stats sum(records_returned) as output_size| fieldformat output_size= output_size/ 1000000</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+          <refresh>30s</refresh>
+          <refreshType>delay</refreshType>
+        </search>
+        <option name="colorMode">block</option>
+        <option name="height">83</option>
+        <option name="rangeColors">["0x6db7c6","0x6db7c6"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="unit">MB</option>
+        <option name="useColors">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Total Index Size (GB)</title>
+        <search>
+          <query>| eventcount summarize=false report_size=true index="api_gw_collect_std" | eval Memory Size = size_bytes / 1024 / 1024 /1024 | stats sum(Memory Size)</query>
+          <earliest>1482310920</earliest>
+          <latest>1482311040</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">block</option>
+        <option name="drilldown">all</option>
+        <option name="height">82</option>
+        <option name="numberPrecision">0.0000</option>
+        <option name="rangeColors">["0x65a637","0x65a637"]</option>
+        <option name="rangeValues">[0]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="underLabel">Total Index Size</option>
+        <option name="unit">GB</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <single>
+        <title>Elasticsearch Health</title>
+        <search>
+          <query>index="api_gw_collect_std" | head 1 |  eval Status = "yellow" | eval statusConverter = case (Status = "green", 1, Status = "yellow", 2, Status = "red", 3, 1=1, 4 ) | stats sum(statusConverter) as errors | rangemap field=errors low=0-0 elevated=2-2 severe=3-3 default=none | replace 1 with "Service OK", 2 with "Warning", 3 with "Critical", 4 with "Unkown Error"</query>
+          <earliest>0</earliest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">71</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0xf7bc38"]</option>
+        <option name="rangeValues">[1]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>API Gateway Health</title>
+        <search>
+          <query>index="api_gw_collect_std" | head 1 |  eval Status = "Ok" | eval statusConverter = case (Status = "Ok", 1, Status = "Warning", 2, Status = "Fail", 3, 1=1, 4 ) |stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=severe | replace 1 with "Service OK", 2 with "Failure", 3 with "Critical Failure", 4 with "Unknown Error"</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">66</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Backend API Health</title>
+        <search>
+          <query>index="api_gw_collect_std" $api_id$  | head 1 |  eval Status = "Ok" | eval statusConverter = case (Status = "Ok", 1, Status = "Warning", 2, Status = "Fail", 3, 1=1, 4 ) |stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=severe | replace 1 with "Service OK", 2 with "Failure", 3 with "Critical Failure", 4 with "Unknown Error"</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="height">78</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Recent Requests</title>
+        <search>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$   $organisation_id$ $memory_unit_2$ |  replace "*/search" WITH "Search" IN query_type | replace "*/ingress" WITH "Ingress" IN query_type | replace 200 WITH "Success: Ok (200)" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status | eval start_date = substr(start_time, 1,10) | eval end_date = substr(end_time, 1,10) | eval start_substr = substr(start_time, len(start_time)-12,12) | eval end_substr = substr(end_time, len(end_time)-12,12) | eval start_strf = strptime(start_substr, "%H:%M:%S.%3N") | eval end_strf = strptime(end_substr, "%H:%M:%S.%3N") | eval temp_math = tostring( (end_strf - start_strf), "duration") | eval difference = replace (temp_math, "(\d+)\:(\d+)\:(\d+)"," \3") | eval concat_start =  start_date + " " +  start_substr | eval concat_end =  end_date + " " +  end_substr | table GUID, concat_start, concat_end, difference, query_type, records_returned, computed_output, request_status | rename GUID AS "Request ID", concat_start AS "Requests Date and Time", concat_end AS "Response Date and Time", query_type AS "Query Type", records_returned AS "Number of Records Returned", computed_output AS "Output Size", request_status AS "Request Result", difference AS "Time taken to Finish"</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">15</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Request Result">
+          <colorPalette type="map">{"Success: Ok (200)":#65A637,"Failed: Internal Server Error (500)":#D93F3C,"Failed: Bad Request (400)":#D93F3C}</colorPalette>
+        </format>
+        <format type="number" field="Output Size (mb)">
+          <option name="precision">4</option>
+          <option name="unit">mb</option>
+        </format>
+        <format type="color" field="Time taken to Finish">
+          <colorPalette type="list">[#65A637,#F7BC38,#D93F3C]</colorPalette>
+          <scale type="threshold">0.5,1</scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+</form>
