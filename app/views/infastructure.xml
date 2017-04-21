@@ -330,7 +330,7 @@ count by Status</query>
       </table>
     </panel>
   </row>
-  <row depends="$showDetails$">
+<!--   <row depends="$showDetails$">
     <panel>
       <html>
       <h3>Drilldown Details</h3>
@@ -394,5 +394,5 @@ count by Status</query>
       </table>
     </html>
     </panel>
-  </row>
+  </row> -->
 </form>
