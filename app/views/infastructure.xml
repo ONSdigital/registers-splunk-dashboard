@@ -1,11 +1,11 @@
 <form>
   <label>Infastructure</label>
-  <description></description>
+  <description></description>]
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="token_time" searchWhenChanged="true">
       <label>Set Date and Time:</label>
       <default>
-        <earliest>@d</earliest>
+        <earliest>-1d@d</earliest>
         <latest>now</latest>
       </default>
     </input>
@@ -47,7 +47,7 @@
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
         <option name="numberPrecision">0</option>
-        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeColors">["OK":"0x2B9954", "Failed":"0xDC143C"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
@@ -70,7 +70,7 @@
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
         <option name="numberPrecision">0</option>
-        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeColors">{"green":"0x2B9954", "red":"0xDC143C", "yellow":"0xE0EA75"}</option>
         <option name="rangeValues">[0,30,70,100]</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
@@ -110,15 +110,15 @@
     <panel>
       <title>Response Statuses - Errors and Successes</title>
       <!--
-      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are
+      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are 
       computed for all requests status types.
       @choice {radio} On - Typically displays average lines on the graph for each response status
       @choice {radio} Off - The grapph without a average lines
       -->
       <!--
       @feature: JS button
-
-      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall
+      
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall 
       user group usage.
       -->
       <input type="radio" token="response_code_average_switch" searchWhenChanged="true">
@@ -153,7 +153,7 @@
       <title>API Gateway Health</title>
       <chart>
         <search>
-          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | timechart
+          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | timechart 
 count by Status</query>
           <earliest>@mon</earliest>
           <latest>now</latest>
@@ -223,7 +223,8 @@ count by Status</query>
         <title>Shard Status Table</title>
         <search>
           <query>index = "api_gw_collect_std" sourcetype="elasticsearch-shards-health-log"  | eval  time = strftime(_time, "%Y-%d-%m %H:%M:%S") | table time, active_primary_shards, active_shards, delayed_unassigned_shards, indices.$index_name$.active_shards, indices.$index_name$.number_of_shards, indices.$index_name$.shards.0.status, indices.$index_name$.shards.1.status, indices.$index_name$.shards.2.status, indices.$index_name$.shards.3.status, indices.$index_name$.shards.4.status, indices.$index_name$.status | rename time AS "Time", active_primary_shards AS "Active Primary Shards (Overall)", active_shards AS "Active Shards (Overall)", delayed_unassigned_shards AS "Delayed Unassigned Shards (Overall)", indices.$index_name$.active_shards AS "Number of Shards", indices.$index_name$.number_of_shards AS "Number of Shards", indices.$index_name$.shards.0.status AS "Shard 0 Status", indices.$index_name$.shards.1.status AS "Shard 1 Status", indices.$index_name$.shards.2.status AS "Shard 2 Status", indices.$index_name$.shards.3.status AS "Shard 3 Status", indices.$index_name$.shards.4.status AS "Shard 4 Status", indices.$index_name$.status AS "Overall Shard Status"</query>
-          <earliest>0</earliest>
+          <earliest>@w0</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="count">10</option>
@@ -242,7 +243,7 @@ count by Status</query>
         <format type="color" field="Shard 2 Status">
           <colorPalette type="map">{"green":#65A637,"yellow":#F7BC38,"red":#D93F3C}</colorPalette>
         </format>
-       <format type="color" field="Shard 3 Status">
+        <format type="color" field="Shard 3 Status">
           <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
         </format>
         <format type="color" field="Shard 4 Status">
@@ -330,69 +331,66 @@ count by Status</query>
       </table>
     </panel>
   </row>
-<!--   <row depends="$showDetails$">
-    <panel>
-      <html>
-      <h3>Drilldown Details</h3>
-      <table cellpadding="2" cellspacing="0">
-        <tr>
-          <th style="text-align:left; width:100px;">field</th>
-          <th style="text-align:left">value</th>
-        </tr>
-        <tr>
-          <td>Last Similar response status</td>
-          <td>$time$</td>
-        </tr>
-        <tr>
-          <td>Number of User's with similar response status</td>
-          <td>$sourcetype$</td>
-        </tr>
-        <tr>
-          <td>Number of errors produced by user</td>
-          <td>$message$</td>
-        </tr>
-
-
-      </table>
-    </html>
-    </panel>
-    <panel>
-      <html>
-      <h3>Infastructure</h3>
-      <table cellpadding="2" cellspacing="0">
-        <tr>
-          <th style="text-align:left; width:100px;">Previous</th>
-        </tr>
-        <tr>
-          <td>API Status</td>
-          <td>$prevapi$</td>
-        </tr>
-        <tr>
-          <td>Gateway Status</td>
-          <td>$prevgateway$</td>
-        </tr>
-        <tr>
-          <td>Elasticsearch Status</td>
-          <td>$prevelastic$</td>
-        </tr>
-        <tr>
-          <th style="text-align:left">Current</th>
-        </tr>
-
-        <tr>
-          <td>API Status</td>
-          <td>$current$</td>
-        </tr>
-        <tr>
-          <td>Gateway Status</td>
-          <td>$current$</td>
-        </tr>
-        <tr>
-          <td>Elasticsearch Status</td>
-          <td>$current$</td>
-        </tr>
-      </table>
-    </html>
-    </panel>
-  </row> -->
+   <!--<row depends="$showDetails$">-->
+  <!--  <panel>-->
+  <!--    <html>-->
+  <!--    <h3>Drilldown Details</h3>-->
+  <!--    <table cellpadding="2" cellspacing="0">-->
+  <!--      <tr>-->
+  <!--        <th style="text-align:left; width:100px;">field</th>-->
+  <!--        <th style="text-align:left">value</th>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Last Similar response status</td>-->
+  <!--        <td>$time$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Number of User's with similar response status</td>-->
+  <!--        <td>$sourcetype$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Number of errors produced by user</td>-->
+  <!--        <td>$message$</td>-->
+  <!--      </tr>-->
+  <!--    </table>-->
+  <!--  </html>-->
+  <!--  </panel>-->
+  <!--  <panel>-->
+  <!--    <html>-->
+  <!--    <h3>Infastructure</h3>-->
+  <!--    <table cellpadding="2" cellspacing="0">-->
+  <!--      <tr>-->
+  <!--        <th style="text-align:left; width:100px;">Previous</th>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>API Status</td>-->
+  <!--        <td>$prevapi$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Gateway Status</td>-->
+  <!--        <td>$prevgateway$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Elasticsearch Status</td>-->
+  <!--        <td>$prevelastic$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <th style="text-align:left">Current</th>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>API Status</td>-->
+  <!--        <td>$current$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Gateway Status</td>-->
+  <!--        <td>$current$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Elasticsearch Status</td>-->
+  <!--        <td>$current$</td>-->
+  <!--      </tr>-->
+  <!--    </table>-->
+  <!--  </html>-->
+  <!--  </panel>-->
+  <!--</row>-->
 </form>
