@@ -1,14 +1,14 @@
 <form script="table_icons_rangemap.js, tokenlinks.js" stylesheet="table_cell_highlighting.css, table_decorations.css">
   <label>Performance Dashboard - Reporting Dashboard</label>
   <description>Test Dashboard - NO JavaScript</description>
-  <!--
+  <!-- 
   @function Fieldset
-
+  
   @filter {Choice} api_id - identifier of the project being used and their respective logs
   @filter {Choice} env_id - indentifier of the environment of the particular project
   @filter {Choice} organisation_id - strict the logs to focus on the only log of certain user bands
   @filter {Choice} time_setter - change timeframe of certain selected panels with time-setter token
-
+  
   @description - A series of global filters that affect the set of panels and manipulate the log data
   through set params. When changed it will trigger and replace the inputs using the token as anchars and
   substitute the value with the new value
@@ -25,6 +25,7 @@
     </input>
     <input type="dropdown" searchWhenChanged="true" token="env_id">
       <label>Set Environment</label>
+      <choice value="">All</choice>
       <choice value="| where env = &quot;test&quot;">Testing</choice>
       <choice value="| where env = &quot;beta&quot;">Production</choice>
       <choice value="| where env = &quot;dev&quot;">Development</choice>
@@ -48,7 +49,7 @@
     <input type="time" token="time_setter" searchWhenChanged="true">
       <label>Set Time</label>
       <default>
-        <earliest>@d</earliest>
+        <earliest>-1d@d</earliest>
         <latest>now</latest>
       </default>
     </input>
@@ -80,7 +81,7 @@
       </single>
     </panel>
     <panel>
-      <title>Total Calls</title>
+      <title>Total Requests Stored</title>
       <single>
         <search>
           <query>index="api_gw_collect_std" sourcetype="api-gw-syslog"  $api_id$ $env_id$  | stats count</query>
@@ -94,7 +95,7 @@
         <option name="numberPrecision">0</option>
         <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
-       <option name="showSparkline">1</option>
+        <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
@@ -108,14 +109,14 @@
       </single>
     </panel>
     <panel>
-      <title>Real Time Number of Calls</title>
+      <title>Today's Number of Requests</title>
       <single>
         <search>
-          <query>index = "api_gw_collect_std"  sourcetype="api-gw-syslog" $api_id$ $env_id$  | timechart count as "Total API Requests" | fillnull value=NULL</query>
+          <query>index = "api_gw_collect_std"  sourcetype="api-gw-syslog" $api_id$ $env_id$   $organisation_id$ | stats count as "Total API Requests" | fillnull value=NULL</query>
           <earliest>@w0</earliest>
           <latest>now</latest>
         </search>
-        <!-- COMPARISON THRESHOLD
+        <!-- COMPARISON THRESHOLD 
         if over 25% or at -20% flagged as red
         -->
         <option name="colorBy">value</option>
@@ -130,8 +131,7 @@
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
         <option name="trendInterval">-7d</option>
-        <option name="underLabel">Compared to Last 7 Days Ago</option>
-        <option name="unitPosition">after</option>
+        <option name="unitPosition">before</option>
         <option name="useColors">1</option>
         <option name="useThousandSeparators">1</option>
       </single>
@@ -172,14 +172,14 @@
       <!--
       @description - the toggles allow the user to switch on the predict feature which forcasts total volume of requests
       for the next week by evaluating the current and previous week (this can all be altered by editing the predict script)
-
+      
       @toggle Off - continue with the default average line (which is computed using all non-zero values)
       @toggle On - initiate predict and overalys the predict forcast on top of last weeks data
       -->
       <!--
       @feature: JS button
-
-      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall
+      
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall 
       user group usage.
       -->
       <input type="link" token="needed">
@@ -217,7 +217,7 @@
         <option name="charting.chart.overlayFields">Average</option>
         <option name="charting.chart.showDataLabels">none</option>
         <option name="charting.chart.stackMode">default</option>
-        <option name="charting.fieldColors">{"Total API Requests": 0x2B9954, "Average":0xDC143C}</option>
+        <option name="charting.fieldColors">{"Total API Requests": 0x2B9954, "Average":0xE0EA75}</option>
         <option name="charting.legend.masterLegend">null</option>
         <option name="height">300</option>
       </chart>
@@ -258,7 +258,7 @@
     <panel depends="$show_overview$">
       <!--
       @feature: JS button
-
+      
       @description - when pressed the panel returns back to its original state show the initial graph in full scope
       -->
       <chart>
@@ -303,15 +303,15 @@
     <panel>
       <title>Response Statuses - Errors and Successes</title>
       <!--
-      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are
+      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are 
       computed for all requests status types.
       @choice {radio} On - Typically displays average lines on the graph for each response status
       @choice {radio} Off - The grapph without a average lines
       -->
       <!--
       @feature: JS button
-
-      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall
+      
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall 
       user group usage.
       -->
       <input type="radio" token="result_status_average_switch" searchWhenChanged="true">
@@ -345,7 +345,7 @@
     <panel depends="$show_details_request_types$">
       <!--
       @feature: JS button
-
+      
       @description - when pressed the panel returns back to its original state show the initial graph in full scope
       -->
       <table>
@@ -374,7 +374,7 @@
       <title>Query Type and Version</title>
       <!--
       @feature: JS button
-
+      
       @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the proportion of
       different types of request and versions being utilised.
       -->
@@ -399,7 +399,7 @@
     <panel depends="$show_details_query_types$">
       <!--
       @feature: JS button
-
+      
       @description - when pressed the panel returns back to its original state show the initial graph in full scope
       -->
       <chart>
@@ -428,20 +428,20 @@
       -->
       <!--
       @description - A (local) filter to change the memory unit type for the table to make it more legible in some instances.
-
+      
       @option Data Usage - A table of all user groups usage and a graph to show memory usage and number of records returned over time.
       @opion Availability - A table of all the components of the system with a symbolic indicator
       -->
       <!--
       @description - A (local) filter to change the data measurement type for the y axis of the graph.
-
+      
       @option Output Size - Changes the y axis to the data returned in memory unit (kb)
       @opion Records Returned - Changes the y axis to the number of records returned
       -->
       <input type="link" token="needed">
         <label>Choose property:</label>
         <choice value="link4">Data Usage</choice>
-        <choice value="link5">Availability</choice>
+        <!--<choice value="link5">Availability</choice>-->
         <default>Data Usage</default>
         <change>
           <condition value="link4">
@@ -489,7 +489,7 @@
       <chart depends="$showInternal$">
         <title>Data Graph Per User (Measured Based on Selected Data Type)</title>
         <search>
-          <query>index = "api_gw_collect_std"  $api_id$ $env_id$  | timechart sum($graphing_type$) AS "Sum of Total Number of Records Returned" by organisation</query>
+          <query>index = "api_gw_collect_std"  $api_id$  $env_id$  | timechart sum($graphing_type$) AS "Sum of Total Number of Records Returned" by organisation</query>
           <earliest>-48h</earliest>
           <latest>now</latest>
         </search>
@@ -502,25 +502,25 @@
         <option name="charting.chart.stackMode">default</option>
         <option name="height">461</option>
       </chart>
-      <table id="table1" depends="$showSplunkd$">
-        <title>System Component Status (Real - Time)</title>
-        <search>
-          <query>index="api_gw_collect_std" | head 1|  sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(api_status) as "Api_Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>
-          <earliest>@d</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">20</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">row</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-        <drilldown>
-          <link>infastructure</link>
-        </drilldown>
-      </table>
+      <!--<table id="table1" depends="$showSplunkd$">-->
+      <!--  <title>System Component Status (Real - Time)</title>-->
+      <!--  <search>-->
+      <!--    <query>index="api_gw_collect_std" | head 1|  sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(api_status) as "Api_Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>-->
+      <!--    <earliest>@d</earliest>-->
+      <!--    <latest>now</latest>-->
+      <!--    <sampleRatio>1</sampleRatio>-->
+      <!--  </search>-->
+      <!--  <option name="count">20</option>-->
+      <!--  <option name="dataOverlayMode">none</option>-->
+      <!--  <option name="drilldown">row</option>-->
+      <!--  <option name="percentagesRow">false</option>-->
+      <!--  <option name="rowNumbers">false</option>-->
+      <!--  <option name="totalsRow">false</option>-->
+      <!--  <option name="wrap">true</option>-->
+      <!--  <drilldown>-->
+      <!--    <link>infastructure</link>-->
+      <!--  </drilldown>-->
+      <!--</table>-->
     </panel>
   </row>
   <row>
@@ -528,7 +528,7 @@
       <title>Recent Requests</title>
       <!--
       @description - A set of filters to help display the data in more of a meaniful way
-
+      
       @choice-group Memory unit - Changes the y axis to the data returned in memory unit (kb)
       @choice-group query type - to filter and display log and interaction with the api thats of certain type of query
       -->
