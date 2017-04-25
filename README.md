@@ -1,4 +1,4 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0c2ec4f5e9ad4a96bca8033b5c54e66a)](https://www.codacy.com/app/ONS-Digital/business-index-ui?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ONSdigital/splunk-api&amp;utm_campaign=Badge_Grade) [![Bitbucket issues](https://img.shields.io/bitbucket/issues/ONSdigital/splunk-api.svg)]() [![license](https://img.shields.io/github/license/ONSdigital/splunk-api.svg)]()
+[![Bitbucket issues](https://img.shields.io/bitbucket/issues/ONSdigital/splunk-api.svg)]() [![license](https://img.shields.io/github/license/ONSdigital/splunk-api.svg)]()
 
 # Splunk Performance Dashboard
 
