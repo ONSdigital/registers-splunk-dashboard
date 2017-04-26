@@ -1,6 +1,68 @@
 <form>
   <label>Infastructure</label>
-  <description></description>]
+  <description></description>
+  <!--<row depends="$showDetails$">-->
+  <!--  <panel>-->
+  <!--    <html>-->
+  <!--    <h3>Drilldown Details</h3>-->
+  <!--    <table cellpadding="2" cellspacing="0">-->
+  <!--      <tr>-->
+  <!--        <th style="text-align:left; width:100px;">field</th>-->
+  <!--        <th style="text-align:left">value</th>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Last Similar response status</td>-->
+  <!--        <td>$time$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Number of User's with similar response status</td>-->
+  <!--        <td>$sourcetype$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Number of errors produced by user</td>-->
+  <!--        <td>$message$</td>-->
+  <!--      </tr>-->
+  <!--    </table>-->
+  <!--  </html>-->
+  <!--  </panel>-->
+  <!--  <panel>-->
+  <!--    <html>-->
+  <!--    <h3>Infastructure</h3>-->
+  <!--    <table cellpadding="2" cellspacing="0">-->
+  <!--      <tr>-->
+  <!--        <th style="text-align:left; width:100px;">Previous</th>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>API Status</td>-->
+  <!--        <td>$prevapi$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Gateway Status</td>-->
+  <!--        <td>$prevgateway$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Elasticsearch Status</td>-->
+  <!--        <td>$prevelastic$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <th style="text-align:left">Current</th>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>API Status</td>-->
+  <!--        <td>$current$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Gateway Status</td>-->
+  <!--        <td>$current$</td>-->
+  <!--      </tr>-->
+  <!--      <tr>-->
+  <!--        <td>Elasticsearch Status</td>-->
+  <!--        <td>$current$</td>-->
+  <!--      </tr>-->
+  <!--    </table>-->
+  <!--  </html>-->
+  <!--  </panel>-->
+  <!--</row>-->
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="token_time" searchWhenChanged="true">
       <label>Set Date and Time:</label>
@@ -108,155 +170,6 @@
   </row>
   <row>
     <panel>
-      <title>Response Statuses - Errors and Successes</title>
-      <!--
-      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are 
-      computed for all requests status types.
-      @choice {radio} On - Typically displays average lines on the graph for each response status
-      @choice {radio} Off - The grapph without a average lines
-      -->
-      <!--
-      @feature: JS button
-      
-      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall 
-      user group usage.
-      -->
-      <input type="radio" token="response_code_average_switch" searchWhenChanged="true">
-        <label>Average Line Toggle:</label>
-        <default>Off</default>
-        <choice value="eventstats avg(&quot;404&quot;) AS &quot;Average 404&quot; | eventstats avg(&quot;400&quot;) AS &quot;Average 400&quot;">On</choice>
-        <choice value="">Off</choice>
-      </input>
-      <chart>
-        <title>Response Statuses Overtime</title>
-        <search>
-          <query>index = "api_gw_collect_std" $http_status_code_selecter$  | where api = "index.business"  | timechart count as "Number of Queries" by request_status usenull=f | replace 0 WITH NULL</query>
-          <earliest>$token_time.earliest$</earliest>
-          <latest>$token_time.latest$</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="charting.axisTitleX.text">Date</option>
-        <option name="charting.axisTitleY.text">Total Number of Queries</option>
-        <option name="charting.chart">column</option>
-        <option name="charting.chart.nullValueMode">zero</option>
-        <option name="charting.chart.overlayFields">"Average Successes", "Average Failed"</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.fieldColors">{"Success":0x2B9954, "Failed":0xDC143C}</option>
-        <option name="charting.legend.masterLegend">null</option>
-        <option name="height">300</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>API Gateway Health</title>
-      <chart>
-        <search>
-          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | timechart 
-count by Status</query>
-          <earliest>@mon</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.text">Date</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.text">Status Count</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">area</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">all</option>
-        <option name="charting.layout.splitSeries">1</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.placement">right</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Elasticsearch Health</title>
-      <chart>
-        <search>
-          <query>index = "api_gw_collect_std"  sourcetype="elasticsearch-shards-health-log" | timechart count by status</query>
-          <earliest>@w0</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="charting.chart">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
-        <option name="charting.chart.stackMode">stacked</option>
-        <option name="charting.layout.splitSeries">1</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>Elasticsearch</title>
-      <input type="dropdown" searchWhenChanged="true" token="index_name">
-        <label>Set Memory Unit</label>
-        <choice value="bi-beta-april">BI Production</choice>
-        <choice value="bi-dev-april">BI Development</choice>
-        <choice value="bi-test-april">BI Testing</choice>
-        <choice value="hybrid-hierarchy_39_100316_1492524204456">AI Production</choice>
-        <choice value="hybrid_hierarchy_1490264601307">AI Development</choice>
-        <fieldForLabel>Label</fieldForLabel>
-        <fieldForValue>Value</fieldForValue>
-        <default>bi-dev-april</default>
-      </input>
-      <table>
-        <title>Shard Status Table</title>
-        <search>
-          <query>index = "api_gw_collect_std" sourcetype="elasticsearch-shards-health-log"  | eval  time = strftime(_time, "%Y-%d-%m %H:%M:%S") | table time, active_primary_shards, active_shards, delayed_unassigned_shards, indices.$index_name$.active_shards, indices.$index_name$.number_of_shards, indices.$index_name$.shards.0.status, indices.$index_name$.shards.1.status, indices.$index_name$.shards.2.status, indices.$index_name$.shards.3.status, indices.$index_name$.shards.4.status, indices.$index_name$.status | rename time AS "Time", active_primary_shards AS "Active Primary Shards (Overall)", active_shards AS "Active Shards (Overall)", delayed_unassigned_shards AS "Delayed Unassigned Shards (Overall)", indices.$index_name$.active_shards AS "Number of Shards", indices.$index_name$.number_of_shards AS "Number of Shards", indices.$index_name$.shards.0.status AS "Shard 0 Status", indices.$index_name$.shards.1.status AS "Shard 1 Status", indices.$index_name$.shards.2.status AS "Shard 2 Status", indices.$index_name$.shards.3.status AS "Shard 3 Status", indices.$index_name$.shards.4.status AS "Shard 4 Status", indices.$index_name$.status AS "Overall Shard Status"</query>
-          <earliest>@w0</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="count">10</option>
-        <option name="dataOverlayMode">none</option>
-        <option name="drilldown">cell</option>
-        <option name="percentagesRow">false</option>
-        <option name="rowNumbers">false</option>
-        <option name="totalsRow">false</option>
-        <option name="wrap">true</option>
-        <format type="color" field="Shard 0 Status">
-          <colorPalette type="map">{"green":#65A637,"yelllow":#F7BC38,"red":#D93F3C}</colorPalette>
-        </format>
-        <format type="color" field="Shard 1 Status">
-          <colorPalette type="map">{"green":#65A637,"yellow":#F7BC38,"red":#D93F3C}</colorPalette>
-        </format>
-        <format type="color" field="Shard 2 Status">
-          <colorPalette type="map">{"green":#65A637,"yellow":#F7BC38,"red":#D93F3C}</colorPalette>
-        </format>
-        <format type="color" field="Shard 3 Status">
-          <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
-        </format>
-        <format type="color" field="Shard 4 Status">
-          <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
-        </format>
-        <format type="color" field="Overall Shard Status">
-          <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
-        </format>
-      </table>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <input type="dropdown" searchWhenChanged="true" token="memory_unit_init">
         <label>Set Memory Unit</label>
         <choice value="| eval computed_output = tostring(output_size/1000) + &quot; Kb&quot;">Kilobytes (Kb)</choice>
@@ -331,66 +244,153 @@ count by Status</query>
       </table>
     </panel>
   </row>
-   <!--<row depends="$showDetails$">-->
-  <!--  <panel>-->
-  <!--    <html>-->
-  <!--    <h3>Drilldown Details</h3>-->
-  <!--    <table cellpadding="2" cellspacing="0">-->
-  <!--      <tr>-->
-  <!--        <th style="text-align:left; width:100px;">field</th>-->
-  <!--        <th style="text-align:left">value</th>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Last Similar response status</td>-->
-  <!--        <td>$time$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Number of User's with similar response status</td>-->
-  <!--        <td>$sourcetype$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Number of errors produced by user</td>-->
-  <!--        <td>$message$</td>-->
-  <!--      </tr>-->
-  <!--    </table>-->
-  <!--  </html>-->
-  <!--  </panel>-->
-  <!--  <panel>-->
-  <!--    <html>-->
-  <!--    <h3>Infastructure</h3>-->
-  <!--    <table cellpadding="2" cellspacing="0">-->
-  <!--      <tr>-->
-  <!--        <th style="text-align:left; width:100px;">Previous</th>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>API Status</td>-->
-  <!--        <td>$prevapi$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Gateway Status</td>-->
-  <!--        <td>$prevgateway$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Elasticsearch Status</td>-->
-  <!--        <td>$prevelastic$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <th style="text-align:left">Current</th>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>API Status</td>-->
-  <!--        <td>$current$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Gateway Status</td>-->
-  <!--        <td>$current$</td>-->
-  <!--      </tr>-->
-  <!--      <tr>-->
-  <!--        <td>Elasticsearch Status</td>-->
-  <!--        <td>$current$</td>-->
-  <!--      </tr>-->
-  <!--    </table>-->
-  <!--  </html>-->
-  <!--  </panel>-->
-  <!--</row>-->
+  <row>
+    <panel>
+      <title>Response Statuses - Errors and Successes</title>
+      <!--
+      @description Average Line Toggle - A toggle to switch on or off (default) the average lines, which are 
+      computed for all requests status types.
+      @choice {radio} On - Typically displays average lines on the graph for each response status
+      @choice {radio} Off - The grapph without a average lines
+      -->
+      <!--
+      @feature: JS button
+      
+      @description - when pressed the panel is split into two, with the right most portion displaying a pie chart of the overall 
+      user group usage.
+      -->
+      <input type="radio" token="response_code_average_switch" searchWhenChanged="true">
+        <label>Average Line Toggle:</label>
+        <default>Off</default>
+        <choice value="eventstats avg(&quot;404&quot;) AS &quot;Average 404&quot; | eventstats avg(&quot;400&quot;) AS &quot;Average 400&quot;">On</choice>
+        <choice value="">Off</choice>
+      </input>
+      <chart>
+        <title>Response Statuses Overtime</title>
+        <search>
+          <query>index = "api_gw_collect_std" $http_status_code_selecter$  | where api = "index.business"  | timechart count as "Number of Queries" by request_status usenull=f | replace 0 WITH NULL</query>
+          <earliest>$token_time.earliest$</earliest>
+          <latest>$token_time.latest$</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleY.text">Total Number of Queries</option>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.overlayFields">"Average Successes", "Average Failed"</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.fieldColors">{"Success":0x2B9954, "Failed":0xDC143C}</option>
+        <option name="charting.legend.masterLegend">null</option>
+        <option name="height">300</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>API Gateway Health</title>
+      <chart>
+        <search>
+          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | timechart 
+count by Status</query>
+          <earliest>@mon</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Status Count</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Elasticsearch Health</title>
+      <chart>
+        <search>
+          <query>index = "api_gw_collect_std"  sourcetype="elasticsearch-shards-health-log" | timechart count by status</query>
+          <earliest>@w0</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.layout.splitSeries">1</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Elasticsearch Indices Health</title>
+      <input type="dropdown" searchWhenChanged="true" token="index_name">
+        <label>Index Name</label>
+        <choice value="bi-beta-april">BI Production</choice>
+        <choice value="bi-dev-april">BI Development</choice>
+        <choice value="bi-test-april">BI Testing</choice>
+        <choice value="hybrid-hierarchy_39_100316_1492524204456">AI Production</choice>
+        <choice value="hybrid_hierarchy_1490264601307">AI Development</choice>
+        <fieldForLabel>Label</fieldForLabel>
+        <fieldForValue>Value</fieldForValue>
+        <default>bi-dev-april</default>
+      </input>
+      <table>
+        <title>Shard Status Table</title>
+        <search>
+          <query>index = "api_gw_collect_std" sourcetype="elasticsearch-shards-health-log"  | eval  time = strftime(_time, "%Y-%d-%m %H:%M:%S") | table time, active_primary_shards, active_shards, delayed_unassigned_shards, indices.$index_name$.active_shards, indices.$index_name$.number_of_shards, indices.$index_name$.shards.0.status, indices.$index_name$.shards.1.status, indices.$index_name$.shards.2.status, indices.$index_name$.shards.3.status, indices.$index_name$.shards.4.status, indices.$index_name$.status | rename time AS "Time", active_primary_shards AS "Active Primary Shards (Overall)", active_shards AS "Active Shards (Overall)", delayed_unassigned_shards AS "Delayed Unassigned Shards (Overall)", indices.$index_name$.active_shards AS "Number of Shards", indices.$index_name$.number_of_shards AS "Number of Shards", indices.$index_name$.shards.0.status AS "Shard 0 Status", indices.$index_name$.shards.1.status AS "Shard 1 Status", indices.$index_name$.shards.2.status AS "Shard 2 Status", indices.$index_name$.shards.3.status AS "Shard 3 Status", indices.$index_name$.shards.4.status AS "Shard 4 Status", indices.$index_name$.status AS "Overall Shard Status"</query>
+          <earliest>@w0</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="Shard 0 Status">
+          <colorPalette type="map">{"green":#65A637,"yelllow":#F7BC38,"red":#D93F3C}</colorPalette>
+        </format>
+        <format type="color" field="Shard 1 Status">
+          <colorPalette type="map">{"green":#65A637,"yellow":#F7BC38,"red":#D93F3C}</colorPalette>
+        </format>
+        <format type="color" field="Shard 2 Status">
+          <colorPalette type="map">{"green":#65A637,"yellow":#F7BC38,"red":#D93F3C}</colorPalette>
+        </format>
+        <format type="color" field="Shard 3 Status">
+          <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
+        </format>
+        <format type="color" field="Shard 4 Status">
+          <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
+        </format>
+        <format type="color" field="Overall Shard Status">
+          <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
 </form>
