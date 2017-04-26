@@ -1,6 +1,5 @@
 <form>
-  <label>Infastructure</label>
-  <description></description>
+  <label>Infrastructure</label>
   <!--<row depends="$showDetails$">-->
   <!--  <panel>-->
   <!--    <html>-->
@@ -283,6 +282,44 @@
         <option name="charting.fieldColors">{"Success":0x2B9954, "Failed":0xDC143C}</option>
         <option name="charting.legend.masterLegend">null</option>
         <option name="height">300</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Index Health</title>
+      <chart>
+        <search>
+          <query>index="api_gw_collect_std"  sourcetype="bi-api-health-log"  | rex "Status: (?&lt;Status&gt;[^]*) , Uptime:(?&lt;uptime&gt;[^ ]*)" | timechart count by Status</query>
+          <earliest>@mon</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Status Count</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
       </chart>
     </panel>
   </row>
