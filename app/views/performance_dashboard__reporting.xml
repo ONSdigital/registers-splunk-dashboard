@@ -37,8 +37,8 @@
       <label>Set Organisation</label>
       <choice value="">All</choice>
       <choice value="| where organisation=&quot;ONS&quot;">ONS</choice>
-      <choice value="| where organisation=&quot;HMRC&quot;">HMRC</choice>
-      <choice value="| where organisation=&quot;HSE&quot;">HSE</choice>
+      <choice value="| where organisation=&quot;HMRC_DIGITAL&quot;">HMRC</choice>
+      <choice value="| where organisation=&quot;HSL&quot;">HSE</choice>
       <choice value="| where organisation=&quot;AppLevy&quot;">App Levy</choice>
       <choice value="| where organisation=&quot;ScottishGovernment&quot;">Scottish Government</choice>
       <choice value="| where organisation=&quot;BEIS&quot;">BEIS</choice>
@@ -351,7 +351,7 @@
       <table>
         <title>Overall Request Status Overview</title>
         <search>
-          <query>index = "api_gw_collect_std"   $api_id$ $env_id$    |  replace 200 WITH "Success" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status | stats count(request_status) as "Number of Successes or Failures" by organisation, request_status</query>
+          <query>index = "api_gw_collect_std"   $api_id$ $env_id$    |  replace 200 WITH "Success: OK (200)" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  |  replace 404 WITH "Failed: Not Found (404)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status  | replace 503 WITH "Failed: Service Unavailable (503)" IN request_status | stats count(request_status) as "Number of Successes or Failures" by organisation, request_status</query>
           <earliest>$time_setter.earliest$</earliest>
           <latest>$time_setter.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -438,6 +438,25 @@
       @option Output Size - Changes the y axis to the data returned in memory unit (kb)
       @opion Records Returned - Changes the y axis to the number of records returned
       -->
+      <!--<table id="table1" depends="$showSplunkd$">-->
+      <!--  <title>System Component Status (Real - Time)</title>-->
+      <!--  <search>-->
+      <!--    <query>index="api_gw_collect_std" | head 1|  sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(api_status) as "Api_Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>-->
+      <!--    <earliest>@d</earliest>-->
+      <!--    <latest>now</latest>-->
+      <!--    <sampleRatio>1</sampleRatio>-->
+      <!--  </search>-->
+      <!--  <option name="count">20</option>-->
+      <!--  <option name="dataOverlayMode">none</option>-->
+      <!--  <option name="drilldown">row</option>-->
+      <!--  <option name="percentagesRow">false</option>-->
+      <!--  <option name="rowNumbers">false</option>-->
+      <!--  <option name="totalsRow">false</option>-->
+      <!--  <option name="wrap">true</option>-->
+      <!--  <drilldown>-->
+      <!--    <link>infastructure</link>-->
+      <!--  </drilldown>-->
+      <!--</table>-->
       <input type="link" token="needed">
         <label>Choose property:</label>
         <choice value="link4">Data Usage</choice>
@@ -502,25 +521,6 @@
         <option name="charting.chart.stackMode">default</option>
         <option name="height">461</option>
       </chart>
-      <!--<table id="table1" depends="$showSplunkd$">-->
-      <!--  <title>System Component Status (Real - Time)</title>-->
-      <!--  <search>-->
-      <!--    <query>index="api_gw_collect_std" | head 1|  sum(elastic_search_status) as "Elasticsearch Status", sum(flume_status) as "Flume Status", sum(api_status) as "Api_Status" | table "Flume Status", "HDFS Status", "Elasticsearch Status", "Spark Status" | transpose | rename "column" as "Component Type", "row 1" as "Current Score"| rangemap field="Current Score" low=0.1-1 elevated=1.1-2 severe=2.1-3 default=none</query>-->
-      <!--    <earliest>@d</earliest>-->
-      <!--    <latest>now</latest>-->
-      <!--    <sampleRatio>1</sampleRatio>-->
-      <!--  </search>-->
-      <!--  <option name="count">20</option>-->
-      <!--  <option name="dataOverlayMode">none</option>-->
-      <!--  <option name="drilldown">row</option>-->
-      <!--  <option name="percentagesRow">false</option>-->
-      <!--  <option name="rowNumbers">false</option>-->
-      <!--  <option name="totalsRow">false</option>-->
-      <!--  <option name="wrap">true</option>-->
-      <!--  <drilldown>-->
-      <!--    <link>infastructure</link>-->
-      <!--  </drilldown>-->
-      <!--</table>-->
     </panel>
   </row>
   <row>
