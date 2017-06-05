@@ -40,7 +40,7 @@
       <choice value="| where organisation=&quot;HMRC_DIGITAL&quot;">HMRC</choice>
       <choice value="| where organisation=&quot;HSL&quot;">HSE</choice>
       <choice value="| where organisation=&quot;AppLevy&quot;">App Levy</choice>
-      <choice value="| where organisation=&quot;ScottishGovernment&quot;">Scottish Government</choice>
+      <choice value="| where organisation=&quot;Scot_Gov&quot;">Scottish Government</choice>
       <choice value="| where organisation=&quot;BEIS&quot;">BEIS</choice>
       <fieldForLabel>Label</fieldForLabel>
       <fieldForValue>Value</fieldForValue>
@@ -113,7 +113,7 @@
       <single>
         <search>
           <query>index = "api_gw_collect_std"  sourcetype="api-gw-syslog" $api_id$ $env_id$   $organisation_id$ | stats count as "Total API Requests" | fillnull value=NULL</query>
-          <earliest>@w0</earliest>
+          <earliest>@d</earliest>
           <latest>now</latest>
         </search>
         <!-- COMPARISON THRESHOLD 
@@ -264,9 +264,9 @@
       <chart>
         <title>Volume of Requests Distribution</title>
         <search>
-          <query>index = "api_gw_collect_std"  $api_id$ $env_id$  | stats count as "Total API Requests" by organisation</query>
-          <earliest>$earliest$</earliest>
-          <latest>$latest$</latest>
+          <query>index = "api_gw_collect_std"  $api_id$ $env_id$  | replace "SCOT_GOV" WITH "Scottish Government" IN organisation  | replace "HMRC_DIGITAL" WITH "HMRC" IN organisation | stats count as "Total API Requests" by organisation</query>
+          <earliest>$time_setter.earliest$</earliest>
+          <latest>$time_setter.latest$</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
@@ -323,7 +323,7 @@
       <chart>
         <title>Response Statuses Overtime</title>
         <search>
-          <query>index = "api_gw_collect_std" $api_id$ $env_id$   |  replace 200 WITH "Success" IN request_status |  replace 400 WITH "Failed" IN request_status  | replace 404 WITH "Failed" IN request_status  | replace 503 WITH "Failed" IN request_status   | replace 401 WITH "Failed" IN request_status  | replace 500 WITH "Failed" IN request_status  | timechart count as "Number of Queries" by request_status usenull=f | replace 0 WITH NULL | $result_status_average_switch$</query>
+          <query>index = "api_gw_collect_std" $api_id$ $env_id$   |  replace 200 WITH "Success" IN request_status |  replace 400 WITH "Failed" IN request_status  | replace 404 WITH "Failed" IN request_status  | replace 503 WITH "Failed" IN request_status   | replace 401 WITH "Failed" IN request_status  | replace 500 WITH "Failed" IN request_status  |  replace 502 WITH "Failed" IN request_status | replace 503 WITH "Failed" IN request_status | timechart count as "Number of Queries" by request_status usenull=f | replace 0 WITH NULL | $result_status_average_switch$</query>
           <earliest>-14d@h</earliest>
           <latest>now</latest>
           <sampleRatio>1</sampleRatio>
@@ -351,7 +351,7 @@
       <table>
         <title>Overall Request Status Overview</title>
         <search>
-          <query>index = "api_gw_collect_std"   $api_id$ $env_id$    |  replace 200 WITH "Success: OK (200)" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  |  replace 404 WITH "Failed: Not Found (404)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status  | replace 503 WITH "Failed: Service Unavailable (503)" IN request_status | stats count(request_status) as "Number of Successes or Failures" by organisation, request_status</query>
+          <query>index = "api_gw_collect_std"   $api_id$ $env_id$   | replace "SCOT_GOV" WITH "Scottish Government" IN organisation  | replace "HMRC_DIGITAL" WITH "HMRC" IN organisation  |  replace 200 WITH "Success: OK (200)" IN request_status |  replace 400 WITH "Failed: Bad Request (400)" IN request_status  |  replace 404 WITH "Failed: Not Found (404)" IN request_status  | replace 500 WITH "Failed: Internal Server Error (500)" IN request_status  | replace 503 WITH "Failed: Service Unavailable (503)" IN request_status | stats count(request_status) as "Number of Successes or Failures" by organisation, request_status</query>
           <earliest>$time_setter.earliest$</earliest>
           <latest>$time_setter.latest$</latest>
           <sampleRatio>1</sampleRatio>
@@ -454,7 +454,7 @@
       <!--  <option name="totalsRow">false</option>-->
       <!--  <option name="wrap">true</option>-->
       <!--  <drilldown>-->
-      <!--    <link>infastructure</link>-->
+      <!--    <link>Infrastructure</link>-->
       <!--  </drilldown>-->
       <!--</table>-->
       <input type="link" token="needed">
@@ -493,7 +493,7 @@
       <table depends="$showInternal$">
         <title>Data Requests Overview [Drilldown]</title>
         <search>
-          <query>index = "api_gw_collect_std" $api_id$ $env_id$ $memory_unit_1$ | stats  sparkline count,  sum(records_returned) AS "Total Records Returned", sum(conversion) AS computed_output by organisation | eval computed_output = tostring(computed_output)  |  rename organisation AS "Organisation Name", sparkline AS "Sparkline", count AS "Total Requests", computed_output AS "Output Size" | sort -"Total Records Returned"</query>
+          <query>index = "api_gw_collect_std" $api_id$ $env_id$ $memory_unit_1$ |  replace "SCOT_GOV" WITH "Scottish Government" IN organisation  | replace "HMRC_DIGITAL" WITH "HMRC" IN organisation | stats  sparkline count,  sum(records_returned) AS "Total Records Returned", sum(conversion) AS computed_output by organisation | eval computed_output = tostring(computed_output)  |  rename organisation AS "Organisation Name", sparkline AS "Sparkline", count AS "Total Requests", computed_output AS "Output Size" | sort -"Total Records Returned"</query>
           <earliest>$time_setter.earliest$</earliest>
           <latest>$time_setter.latest$</latest>
         </search>
