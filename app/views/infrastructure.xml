@@ -99,16 +99,16 @@
       <title>API Gateway Health</title>
       <single>
         <search>
-          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | head 1 | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | eval statusConverter = case (Status = "OK", 1, Status = "Warning", 2, Status = "Fail", 3, 1=1, 4 ) |stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=severe | replace 1 with "Service OK", 2 with "Failure", 3 with "Critical Failure", 4 with "Unknown Error"</query>
-          <earliest>$earliest$</earliest>
-          <latest>$latest$</latest>
+          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | where Status = "OK" | stats count as GW1 | appendcols [search index="api_gw_collect_std"   sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | where Status = "OK" | stats count as GW2 ] | eval Total = GW1 + GW2 | eval statusConverter = case (Total &gt;= 2, 1, Total = 1, 2, Total = 0, 3, 0=0, 4 ) | stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=severe | replace 1 with "Service OK", 2 with "Failure", 3 with "Critical Failure", 4 with "Unknown Error"</query>
+          <earliest>-1m</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
-        <option name="colorMode">none</option>
+        <option name="colorMode">block</option>
         <option name="drilldown">none</option>
         <option name="numberPrecision">0</option>
-        <option name="rangeColors">["OK":"0x2B9954", "Failed":"0xDC143C"]</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
         <option name="rangeValues">[0,30,70,100]</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
@@ -123,12 +123,13 @@
       <title>Elasticsearch Health</title>
       <single>
         <search>
-          <query>index = "api_gw_collect_std" sourcetype="elasticsearch-shards-health-log" | head 1 | eval Status = status | eval statusConverter = case (Status = "green", 1, Status = "yellow", 2, Status = "red", 3, 1=1, 4 ) | stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=none | replace 1 with "Service OK", 2 with "Warning", 3 with "Critical", 4 with "Unkown Error"</query>
-          <earliest>0</earliest>
+          <query>index = "api_gw_collect_std" sourcetype="elasticsearch-shards-health-log" | head 1 | eval Status = status | eval statusConverter = case (Status = "green", 1, Status = "yellow", 2, Status = "red", 3, 0=0, 4 ) | stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=none | replace 1 with "Service OK", 2 with "Warning", 3 with "Critical", 4 with "Unkown Error"</query>
+          <earliest>rt-5m</earliest>
+          <latest>rt</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
-        <option name="colorMode">none</option>
+        <option name="colorMode">block</option>
         <option name="drilldown">none</option>
         <option name="numberPrecision">0</option>
         <option name="rangeColors">{"green":"0x2B9954", "red":"0xDC143C", "yellow":"0xE0EA75"}</option>
@@ -146,13 +147,13 @@
       <title>Backend API Health</title>
       <single>
         <search>
-          <query>index="api_gw_collect_std"  sourcetype="bi-api-health-log" | head 1 | rex "Status: (?&lt;Status&gt;[^]*) , Uptime:(?&lt;uptime&gt;[^ ]*)"  | eval statusConverter = case (Status = "Ok", 1, Status = "Warning", 2, Status = "Fail", 3, 1=1, 4 ) |stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=severe | replace 1 with "Service OK", 2 with "Failure", 3 with "Critical Failure", 4 with "Unknown Error"</query>
-          <earliest>$earliest$</earliest>
-          <latest>$latest$</latest>
+          <query>index="api_gw_collect_std"  sourcetype="bi-api-health-log" | head 1 | rex "Status: (?&lt;Status&gt;[^]*) , Uptime:(?&lt;uptime&gt;[^ ]*)"  | stats count as Total | eval statusConverter = case (Status = "Ok" AND Total = 1, 1, Status = "Warning", 2, Total != 1, 3, 1=1, 4 ) | stats sum(statusConverter) as errors | rangemap field=errors low=1-1 elevated=2-2 severe=3-3 default=severe | replace 1 with "Service OK", 2 with "Failure", 3 with "Critical Failure", 4 with "Unknown Error"</query>
+          <earliest>-30m</earliest>
+          <latest>now</latest>
           <sampleRatio>1</sampleRatio>
         </search>
         <option name="colorBy">value</option>
-        <option name="colorMode">none</option>
+        <option name="colorMode">block</option>
         <option name="drilldown">none</option>
         <option name="numberPrecision">0</option>
         <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
@@ -287,83 +288,6 @@
   </row>
   <row>
     <panel>
-      <title>Index Health</title>
-      <chart>
-        <search>
-          <query>index="api_gw_collect_std"  sourcetype="bi-api-health-log"  | rex "Status: (?&lt;Status&gt;[^]*) , Uptime:(?&lt;uptime&gt;[^ ]*)" | timechart count by Status</query>
-          <earliest>@mon</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
-        <option name="charting.axisTitleX.text">Date</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.text">Status Count</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">line</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">all</option>
-        <option name="charting.layout.splitSeries">0</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.placement">right</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
-      <title>API Gateway Health</title>
-      <chart>
-        <search>
-          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | timechart 
-count by Status</query>
-          <earliest>@mon</earliest>
-          <latest>now</latest>
-          <sampleRatio>1</sampleRatio>
-        </search>
-        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
-        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
-        <option name="charting.axisTitleX.text">Date</option>
-        <option name="charting.axisTitleX.visibility">visible</option>
-        <option name="charting.axisTitleY.text">Status Count</option>
-        <option name="charting.axisTitleY.visibility">visible</option>
-        <option name="charting.axisTitleY2.visibility">visible</option>
-        <option name="charting.axisX.scale">linear</option>
-        <option name="charting.axisY.scale">linear</option>
-        <option name="charting.axisY2.enabled">0</option>
-        <option name="charting.axisY2.scale">inherit</option>
-        <option name="charting.chart">line</option>
-        <option name="charting.chart.bubbleMaximumSize">50</option>
-        <option name="charting.chart.bubbleMinimumSize">10</option>
-        <option name="charting.chart.bubbleSizeBy">area</option>
-        <option name="charting.chart.nullValueMode">gaps</option>
-        <option name="charting.chart.showDataLabels">minmax</option>
-        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-        <option name="charting.chart.stackMode">default</option>
-        <option name="charting.chart.style">shiny</option>
-        <option name="charting.drilldown">all</option>
-        <option name="charting.layout.splitSeries">1</option>
-        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
-        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
-        <option name="charting.legend.placement">right</option>
-      </chart>
-    </panel>
-  </row>
-  <row>
-    <panel>
       <title>Elasticsearch Health</title>
       <chart>
         <search>
@@ -428,6 +352,83 @@ count by Status</query>
           <colorPalette type="map">{"red":#D93F3C,"yellow":#F7BC38,"green":#65A637}</colorPalette>
         </format>
       </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>API Gateway Health</title>
+      <chart>
+        <search>
+          <query>index="api_gw_collect_std"  sourcetype="gw-health-log" | rex "\&lt;h1\&gt;(?&lt;Status&gt;[^\&lt;\/h1\&gt;]*)" | timechart 
+avg(Status) by Status</query>
+          <earliest>@mon</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Status Count</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">1</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Index Health</title>
+      <chart>
+        <search>
+          <query>index="api_gw_collect_std"  sourcetype="bi-api-health-log"  | rex "Status: (?&lt;Status&gt;[^]*) , Uptime:(?&lt;uptime&gt;[^ ]*)" | timechart count by Status</query>
+          <earliest>@mon</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">-45</option>
+        <option name="charting.axisTitleX.text">Date</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.text">Status Count</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">minmax</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
     </panel>
   </row>
 </form>
